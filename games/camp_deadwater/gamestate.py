@@ -9,10 +9,12 @@ class GameState(GameStateOverride):
         self.repeat = True
         while self.repeat:
             self.reset_book()
-            self.draw_board()
 
-            # Roll this spin's merit badge (live in the base game too), then evaluate.
+            # Roll this spin's merit badge (live in the base game too) BEFORE drawing, so the reveal
+            # event can carry it (draw_board -> reveal_event; see the draw_board override that attaches
+            # `wildMultiplier`). Then evaluate.
             self.spin_badge = self.roll_merit_badge()
+            self.draw_board()
             self.evaluate_lines_board()
 
             self.win_manager.update_gametype_wins(self.gametype)
@@ -27,10 +29,11 @@ class GameState(GameStateOverride):
         self.reset_fs_spin()
         while self.fs < self.tot_fs:
             self.update_freespin()
-            self.draw_board()
 
             # One badge per free spin, shared by the natural and (if it fires) the tumbled board.
+            # Rolled BEFORE drawing so the reveal event carries it (see the draw_board override).
             self.spin_badge = self.roll_merit_badge()
+            self.draw_board()
 
             # Natural pre-grab board pays first.
             self.evaluate_lines_board()

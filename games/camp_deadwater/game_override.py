@@ -13,6 +13,15 @@ class GameStateOverride(GameExecutables):
         super().reset_book()
         self.fs_tier = 1
 
+    def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
+        """Draw + reveal, then attach this spin's merit badge to the reveal as `wildMultiplier` — the
+        client's badge rail lights it on every reveal (base and free, incl. losing/no-wild spins),
+        matching our internal `reveal.wildMultiplier`. `self.spin_badge` is rolled before draw_board
+        (see gamestate), so it is set by the time reveal_event has run."""
+        super().draw_board(emit_event=emit_event, trigger_symbol=trigger_symbol)
+        if emit_event:
+            self.book.events[-1]["wildMultiplier"] = getattr(self, "spin_badge", 1)
+
     def update_freespin_amount(self, scatter_key: str = "scatter") -> None:
         """Set the feature TIER + total spins at the initial trigger. Tier is fixed by the trigger's
         scatter count (3/4/5 → tier 1/2/3) and drives maxHands (3/4/5) + the badge floor (1×/3×/5×).
@@ -29,6 +38,46 @@ class GameStateOverride(GameExecutables):
         self.tot_fs = self.config.tier_spins[tier]
         basegame_trigger = self.gametype == self.config.basegame_type
         fs_trigger_event(self, basegame_trigger=basegame_trigger, freegame_trigger=not basegame_trigger)
+        # Enrich the trigger so the client can build both its bonusTrigger and bonusStart from one event:
+        # tier, scatter count, the pre-upgrade tier (only when "Dig Deeper" promoted it), the tier's hand
+        # cap, and the badge FLOOR (present only on tiers that floor — tier 1 re-rolls freely).
+        ev = self.book.events[-1]
+        ev["level"] = tier
+        ev["count"] = int(self.count_special_symbols(scatter_key))
+        if base_tier < tier:
+            ev["baseLevel"] = base_tier
+        ev["maxHands"] = self.config.hands_max_by_tier[tier]
+        floor = self.config.tier_floor.get(tier, 1)
+        if floor > 1:
+            ev["multiplier"] = floor
+
+    def update_fs_retrigger_amt(self, scatter_key: str = "scatter") -> None:
+        """Retrigger during the feature: add spins, then enrich the emitted freeSpinRetrigger so the
+        client can build our bonusRetrigger. `added` is the delta from the base award. `capped` reflects
+        the SDK's ACTUAL behavior — the base retrigger does NOT enforce `bonus_max`, so it is always
+        False here (kept faithful to the certified math; do not wire the cap without re-certifying)."""
+        before = self.tot_fs
+        super().update_fs_retrigger_amt(scatter_key)
+        ev = self.book.events[-1]
+        ev["level"] = self.fs_tier
+        ev["added"] = int(self.tot_fs - before)
+        ev["capped"] = False
+
+    def update_freespin(self) -> None:
+        """Per-spin counter update; attach the cumulative feature win so the client's bonusUpdate can
+        show the running feature total (book units, 100 = 1.00×)."""
+        super().update_freespin()
+        self.book.events[-1]["totalWin"] = int(
+            round(min(self.win_manager.freegame_wins, self.config.wincap) * 100, 0)
+        )
+
+    def end_freespin(self) -> None:
+        """Feature end; attach the tier and the wincap flag so the client's bonusEnd can pick the MAX
+        WIN outro when the round maxed out."""
+        super().end_freespin()
+        ev = self.book.events[-1]
+        ev["level"] = self.fs_tier
+        ev["maxWin"] = bool(self.wincap_triggered)
 
     def assign_special_sym_function(self):
         self.special_symbol_functions = {

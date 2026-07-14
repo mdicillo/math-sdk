@@ -44,6 +44,18 @@ class GameExecutables(GameCalculations):
         Lines.record_lines_wins(self)
         self.win_manager.update_spinwin(self.win_data["totalWin"])
         Lines.emit_linewin_events(self)
+        # Our internal winInfo.multiplier is present exactly when a WILD is in a winning line (even at a
+        # 1x badge), whereas meta.globalMult collapses to 1 for both "no wild in win" and "wild at 1x".
+        # Attach the wild-in-win signal so the client can set its callout multiplier precisely.
+        # emit_linewin_events emits winInfo -> setWin -> setTotalWin (winInfo only when the spin won), so
+        # scan back to this spin's winInfo, stopping at the reveal boundary.
+        for e in reversed(self.book.events):
+            t = e.get("type")
+            if t == "winInfo":
+                e["hasWildWin"] = bool(has_wild_win)
+                break
+            if t == "reveal":
+                break
 
     # --- Helping Hands (free-spins only) --------------------------------------------------------
     def _is_wild(self, sym) -> bool:
@@ -82,6 +94,7 @@ class GameExecutables(GameCalculations):
         reels = random.sample(eligible, n_hands)
 
         hands = []
+        cleared = []
         for reel in reels:
             height = int(get_random_outcome(self.config.hands_height_weights))
             k = min(height, clearable[reel])
@@ -89,6 +102,10 @@ class GameExecutables(GameCalculations):
                 continue
             col = self.board[reel]
             rows_n = len(col)
+            # The cleared cells are the bottom k rows of this reel (all non-wild). Record them BEFORE
+            # mutating, in unpadded board coords (row 0 = top) — the same convention as the handClear
+            # board — so the client can animate exactly which cells the hands pulled.
+            cleared.extend({"reel": reel, "row": row} for row in range(rows_n - k, rows_n))
             # Drop the bottom k (all non-wild), slide survivors down, refill k wild-rich cells at the top.
             self.board[reel] = [self._grab_symbol() for _ in range(k)] + col[0 : rows_n - k]
             hands.append({"reel": reel, "height": k})
@@ -97,11 +114,12 @@ class GameExecutables(GameCalculations):
             return False
 
         self.get_special_symbols_on_board()
-        self._emit_hand_clear(hands)
+        self._emit_hand_clear(hands, cleared)
         return True
 
-    def _emit_hand_clear(self, hands: list) -> None:
-        """Custom event: the tumbled board + which reels/heights the hands worked. Client animates the grab."""
+    def _emit_hand_clear(self, hands: list, cleared: list) -> None:
+        """Custom event: the tumbled board, which reels/heights the hands worked, and the `cleared` cells
+        they pulled. Client animates the grab. `cleared` is in unpadded board coords, matching `board`."""
         special_attributes = list(self.config.special_symbols.keys())
         board_client = [
             [json_ready_sym(self.board[reel][row], special_attributes) for row in range(len(self.board[reel]))]
@@ -112,6 +130,7 @@ class GameExecutables(GameCalculations):
                 "index": len(self.book.events),
                 "type": "handClear",
                 "hands": hands,
+                "cleared": cleared,
                 "board": board_client,
             }
         )

@@ -43,14 +43,16 @@ class GameConfig(Config):
         self.num_rows = [5] * self.num_reels
 
         # Paytable: (match_count, symbol) -> DISPLAYED x-multiple (see units caveat in the header).
+        # MID-JUICE (#143): de-top-heavied — 3/4-OAK raised, 5-OAK lowered; low ranks regrouped 1-3-1
+        # (A > K=Q=J > 10). Kept in sync with SYMBOLS in gameConfig.ts (displayed× = TS pays / 15).
         self.paytable = {
-            (5, "W"): 60,
-            (5, "H1"): 55, (4, "H1"): 12, (3, "H1"): 3,
-            (5, "H2"): 22, (4, "H2"): 5.5, (3, "H2"): 1.5,
-            (5, "H3"): 15, (4, "H3"): 4, (3, "H3"): 1.2,
-            (5, "H4"): 10, (4, "H4"): 2.5, (3, "H4"): 0.9,
-            (5, "L1"): 3, (4, "L1"): 1.2, (3, "L1"): 0.6,
-            (5, "L2"): 3, (4, "L2"): 1.2, (3, "L2"): 0.6,
+            (5, "W"): 45,
+            (5, "H1"): 40, (4, "H1"): 14, (3, "H1"): 3,
+            (5, "H2"): 16, (4, "H2"): 6.5, (3, "H2"): 1.5,
+            (5, "H3"): 11, (4, "H3"): 4.5, (3, "H3"): 1.5,
+            (5, "H4"): 7, (4, "H4"): 3, (3, "H4"): 1,
+            (5, "L1"): 3, (4, "L1"): 1.5, (3, "L1"): 0.8,
+            (5, "L2"): 2.5, (4, "L2"): 1, (3, "L2"): 0.4,
             (5, "L3"): 2.5, (4, "L3"): 1, (3, "L3"): 0.4,
             (5, "L4"): 2.5, (4, "L4"): 1, (3, "L4"): 0.4,
             (5, "L5"): 2, (4, "L5"): 0.8, (3, "L5"): 0.3,
@@ -77,6 +79,10 @@ class GameConfig(Config):
 
         self.include_padding = True
         self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": ["W"]}
+        # First-aid kit mystery symbol (Phase 2): lands on base/ante reels, reveals into the symbol that
+        # completes a near-miss BEFORE scoring (see game_executables.reveal_mystery). No pays, not special
+        # — registered explicitly in game_override.create_symbol_map so the drawn board accepts it.
+        self.mystery_symbol = "FIRSTAID"
 
         # Scatter count -> free spins. Base trigger 3/4/5 -> 8/12/15; retrigger awards the same.
         self.freespin_triggers = {
@@ -89,8 +95,11 @@ class GameConfig(Config):
         }
 
         # Reels — exported from the TS model (npm run reels:export), WILD->W / BONUS->S.
+        # BR0/ANTE carry the FIRSTAID mystery symbol (base + ante reveal); BR0_BUY is the FIRSTAID-free
+        # base pool buys draw from, so a bought bonus never lands an unrevealed kit on its trigger board.
         reels = {
             "BR0": "BR0.csv",
+            "BR0_BUY": "BR0_buy.csv",
             "FR0": "FR0.csv",
             "FR2": "FR_tier2.csv",
             "FR3": "FR_tier3.csv",
@@ -175,14 +184,14 @@ class GameConfig(Config):
             the free game on the tier's `free_reel`."""
             return {
                 "wincap": {
-                    "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {free_reel: 1, "WCAP": 5}},
+                    "reel_weights": {self.basegame_type: {"BR0_BUY": 1}, self.freegame_type: {free_reel: 1, "WCAP": 5}},
                     "mult_values": {self.basegame_type: badge_dist, self.freegame_type: badge_dist_hot},
                     "scatter_triggers": {scatters: 1},
                     "force_wincap": True,
                     "force_freegame": True,
                 },
                 "freegame": {
-                    "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {free_reel: 1}},
+                    "reel_weights": {self.basegame_type: {"BR0_BUY": 1}, self.freegame_type: {free_reel: 1}},
                     "scatter_triggers": {scatters: 1},
                     "mult_values": {self.basegame_type: badge_dist, self.freegame_type: badge_dist},
                     "force_wincap": False,

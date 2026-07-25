@@ -134,3 +134,97 @@ class GameExecutables(GameCalculations):
                 "board": board_client,
             }
         )
+
+    def reveal_mystery(self) -> None:
+        """First-aid kit rescue (base + ante only). BEFORE scoring, each FIRSTAID cell reveals into the
+        on-line symbol that best COMPLETES a near-miss ("match & extend"): the top-paying left-anchored
+        run reaching the tile, candidates restricted to non-special symbols already on its paylines. A
+        kit that completes nothing falls back to a cosmetic left-payline neighbour, then to any real
+        symbol — NEVER itself, a wild, or a scatter (which would also invent a trigger). Buy and free
+        boards carry no FIRSTAID, so this no-ops there. Mutates self.board and emits a `mysteryReveal`
+        event. Mirrors revealMystery() in the TS provider (incl. the never-self-reveal fallback)."""
+        tile = getattr(self.config, "mystery_symbol", None)
+        if tile is None:
+            return
+        board = self.board
+        num_reels = self.config.num_reels
+        cells = [
+            (reel, row)
+            for reel in range(num_reels)
+            for row in range(len(board[reel]))
+            if board[reel][row].name == tile
+        ]
+        if not cells:
+            return
+
+        wild = self.config.special_symbols["wild"][0]
+        bonus = self.config.special_symbols["scatter"][0]
+        lines = self.config.paylines
+
+        def pay_of(sym, count):
+            return self.config.paytable.get((count, sym), 0)
+
+        def matches(name, s):
+            # A cell counts toward candidate S if it IS S, a wild, or another (still-unrevealed) kit —
+            # kits cooperate so multiple on a line complete it together.
+            return name == s or name == wild or name == tile
+
+        def best_reveal(tr, trow):
+            best_sym, best_pay = None, 0
+            for line in lines.values():
+                if line[tr] != trow:
+                    continue
+                cands = {
+                    board[i][line[i]].name
+                    for i in range(num_reels)
+                    if board[i][line[i]].name not in (wild, tile, bonus)
+                }
+                for s in cands:
+                    run = 0
+                    for i in range(num_reels):
+                        name = s if i == tr else board[i][line[i]].name
+                        if matches(name, s):
+                            run += 1
+                        else:
+                            break
+                    if pay_of(s, run) > best_pay:
+                        best_pay, best_sym = pay_of(s, run), s
+            return best_sym
+
+        def left_neighbor(tr, trow):
+            for line in lines.values():
+                if line[tr] != trow:
+                    continue
+                for i in range(tr - 1, -1, -1):
+                    name = board[i][line[i]].name
+                    if name not in (wild, bonus, tile):
+                        return name
+            return None
+
+        def fallback():
+            for reel in range(num_reels):
+                for row in range(len(board[reel])):
+                    name = board[reel][row].name
+                    if name not in (wild, bonus, tile):
+                        return name
+            for (_count, sym) in self.config.paytable:
+                if sym not in (wild, bonus, tile):
+                    return sym
+            return tile  # unreachable on a real board
+
+        reveals = []
+        for reel, row in cells:
+            to = best_reveal(reel, row) or left_neighbor(reel, row) or fallback()
+            board[reel][row] = self.create_symbol(to)
+            reveals.append({"reel": reel, "row": row, "to": to})
+
+        # Keep special-symbol tracking fresh (reveals are never scatters, so counts don't change, but
+        # this matches the hands feature and guards future changes).
+        self.get_special_symbols_on_board()
+        self.book.add_event(
+            {
+                "index": len(self.book.events),
+                "type": "mysteryReveal",
+                "cells": reveals,
+            }
+        )

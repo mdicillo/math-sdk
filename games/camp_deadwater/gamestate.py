@@ -15,6 +15,11 @@ class GameState(GameStateOverride):
             # `wildMultiplier`). Then evaluate.
             self.spin_badge = self.roll_merit_badge()
             self.draw_board()
+            # First-aid kit rescue (base + ante): reveal any FIRSTAID tiles into the symbols that
+            # complete their near-miss BEFORE scoring, so the evaluator/badge see the revealed board.
+            # No-ops when no kit landed (buys draw a FIRSTAID-free base reel). Base game only — not
+            # called in run_freespin.
+            self.reveal_mystery()
             self.evaluate_lines_board()
 
             self.win_manager.update_gametype_wins(self.gametype)

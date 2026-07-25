@@ -1,5 +1,6 @@
 from game_executables import GameExecutables
 from src.calculations.statistics import get_random_outcome
+from src.calculations.symbol import SymbolDefinition
 from src.events.events import fs_trigger_event
 
 
@@ -8,6 +9,16 @@ class GameStateOverride(GameExecutables):
     This class is is used to override or extend universal state.py functions.
     e.g: A specific game may have custom book properties to reset
     """
+
+    def create_symbol_map(self):
+        """Register the FIRSTAID mystery symbol. The framework derives its symbol set from `paytable` +
+        `special_symbols` only, and `create_symbol` raises for anything else — but FIRSTAID lands on the
+        base/ante reels (no pays, not special) and must exist on the drawn board until reveal_mystery
+        replaces it. Add it as a plain non-paying definition (paytable=None)."""
+        super().create_symbol_map()
+        tile = getattr(self.config, "mystery_symbol", None)
+        if tile and tile not in self.symbol_storage.symbol_defs:
+            self.symbol_storage.symbol_defs[tile] = SymbolDefinition(tile, self.config, None)
 
     def reset_book(self):
         super().reset_book()

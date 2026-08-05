@@ -16,9 +16,16 @@ class GameStateOverride(GameExecutables):
             self.symbol_storage.symbol_defs[tile] = SymbolDefinition(tile, self.config, None)
 
     def assign_special_sym_function(self):
-        # Milestone A: no per-symbol functions. The ladder is a whole-board global multiplier, and the
-        # mystery wheel is not yet built, so nothing is attached to a drawn symbol.
+        # No per-symbol functions: the ladder is a whole-board global multiplier, and the mystery wheel
+        # is applied in the tumble loop, not attached to a drawn symbol.
         self.special_symbol_functions = {}
+
+    def update_freespin(self):
+        """Per free spin: reset the ladder to 1x. Milestone B treats every tier the same (reset each
+        spin); Milestone C makes this tier-dependent — tiers 2/3 persist the ladder across the whole
+        feature, and tier 1 persists once the wheel's Upgrade lands."""
+        super().update_freespin()
+        self.global_multiplier = 1
 
     def check_repeat(self):
         """Verify the simulation satisfied its distribution/criteria constraints; if not, resample.

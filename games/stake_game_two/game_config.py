@@ -7,11 +7,10 @@ The game is a 5x3, 243-ways CASCADING (tumble) slot with a running win-multiplie
 "?" wheel, and a three-tier free-spins feature. RTP 96.70%, max win 25,000x.
 
 PORT STATUS — incremental milestones (mirrors how camp_deadwater was ported):
-  - Milestone A (THIS pass): grid, paytable, reels, wincap, base ways evaluation + the cascade
-    (tumble) loop, in base and free spins. The MULTIPLIER LADDER is NEUTRALIZED (global_multiplier
-    held at 1) and the mystery "?" WHEEL is inert, so base-game ways + tumble math can be verified
-    against the TS sim before any of the multiplier mechanics are layered on.
-  - Milestone B: the +1-per-winning-tumble ladder + WILD's flat 5x pay (all-5-reels, once).
+  - Milestone A (built): grid, paytable, reels, wincap, base ways evaluation + the cascade (tumble)
+    loop, in base and free spins. Units verified against the TS model (win == paytable*ways*100).
+  - Milestone B (built): the +1-per-winning-tumble LADDER (global_multiplier, reset each base spin
+    and — for now — each free spin) + WILD's flat 5x pay (all-5-reels, once, x ladder, stacks).
   - Milestone C: the "?" wheel, the three tiers, persistence, retrigger (+5), tier-3 opening spin.
   - Milestone D: the six bet modes (base, 3X Chance, Mystery Chance, Bonus, Super Bonus, Mystery
     Bonus) + optimizer + full cert run.
@@ -70,9 +69,13 @@ class GameConfig(Config):
         }
 
         self.include_padding = True
-        # "multiplier" is intentionally empty in Milestone A — the ladder is applied as a whole-board
-        # GLOBAL multiplier (global_multiplier), not a per-wild symbol multiplier.
+        # "multiplier" is intentionally empty — the ladder is applied as a whole-board GLOBAL
+        # multiplier (global_multiplier), not a per-wild symbol multiplier.
         self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": []}
+        # WILD's own pay (Milestone B): a flat 5x the TOTAL BET, awarded ONCE when a wild is present on
+        # ALL FIVE reels, x the ladder multiplier, and stacked on top of the symbol wins those wilds
+        # complete. NOT a per-way pay (so it is not in `paytable`) — see game_executables.add_wild_pay.
+        self.wild_pay = 5.0
         # Mystery "?" tile. Lands on the reels (no pays, not special) and must exist on the drawn board;
         # registered explicitly in game_override.create_symbol_map. Inert in Milestone A (the wheel is
         # Milestone C).

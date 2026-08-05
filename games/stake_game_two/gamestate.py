@@ -12,11 +12,13 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board()
 
-            # Milestone A: ladder neutralized (global_multiplier stays 1). Evaluate the opening board,
-            # then cascade until a drop pays nothing.
+            # Ladder: the opening board pays at 1x (reset_book sets global_multiplier=1); then every
+            # winning tumble climbs it +1, so the next drop pays at 2x, 3x, … (Rage Quit's per-cascade
+            # multiplier). update_global_mult increments and emits the multiplier event.
             self.get_ways_update_wins()
             self.emit_tumble_win_events()
             while self.win_data["totalWin"] > 0 and not self.wincap_triggered:
+                self.update_global_mult()
                 self.tumble_game_board()
                 self.get_ways_update_wins()
                 self.emit_tumble_win_events()
@@ -37,9 +39,13 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board()
 
+            # Same per-tumble ladder as the base game. Milestone B resets the ladder each free spin
+            # (update_freespin override); tier persistence (t2/t3 keep it across the feature, t1 until
+            # the wheel's Upgrade) is Milestone C.
             self.get_ways_update_wins()
             self.emit_tumble_win_events()
             while self.win_data["totalWin"] > 0 and not self.wincap_triggered:
+                self.update_global_mult()
                 self.tumble_game_board()
                 self.get_ways_update_wins()
                 self.emit_tumble_win_events()

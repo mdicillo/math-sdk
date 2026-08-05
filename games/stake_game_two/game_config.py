@@ -119,6 +119,9 @@ class GameConfig(Config):
             # Boost-mode base pools (Milestone D): 3X Chance = richer scatter, Mystery Chance = thinned.
             "BR0_chance3x": "BR0_chance3x.csv",
             "BR0_mysteryChance": "BR0_mysteryChance.csv",
+            # Hot tail-forcing pool for the wincap criteria (wild+mystery rich). Selected for the
+            # freegame of a "wincap" distribution by get_current_distribution_conditions.
+            "WCAP": "WCAP.csv",
         }
         self.reels = {}
         for r, f in reels.items():
@@ -183,73 +186,71 @@ class GameConfig(Config):
         # (game_override.get_current_distribution_conditions). reel_weights[freegame] below is only a
         # fallback. The wincap distribution is still OMITTED (the max-win tail needs a dedicated WCAP
         # reel + the optimizer, both part of the full cert run); run_debug is sims-only.
-        def base_conditions(base_reel):
-            return {
-                "freegame": {
-                    "reel_weights": {self.basegame_type: {base_reel: 1}, self.freegame_type: {"FR0": 1}},
-                    "scatter_triggers": {3: 50, 4: 20, 5: 5},
-                    "mult_values": {1: 1},
-                    "force_wincap": False,
-                    "force_freegame": True,
-                },
-                "zerowin": {
-                    "reel_weights": {self.basegame_type: {base_reel: 1}},
-                    "mult_values": {1: 1},
-                    "force_wincap": False,
-                    "force_freegame": False,
-                },
-                "basegame": {
-                    "reel_weights": {self.basegame_type: {base_reel: 1}},
-                    "mult_values": {1: 1},
-                    "force_wincap": False,
-                    "force_freegame": False,
-                },
+        # The `wincap` criteria forces the max-win tail on the hot WCAP reel (selected for the freegame
+        # by get_current_distribution_conditions when criteria == "wincap"). `cap` is the mode's
+        # effective wincap in book-value units — 25,000x the base bet, or 25,000x the 50x STAKE for
+        # Mystery Chance — matching win_manager's max_allowed_win so check_repeat can force it exactly.
+        def base_like_dists(base_reel, cap):
+            base_cond = lambda extra: {
+                "reel_weights": {self.basegame_type: {base_reel: 1}, self.freegame_type: {"FR0": 1}},
+                "mult_values": {1: 1},
+                "force_wincap": False,
+                "force_freegame": False,
+                **extra,
             }
-
-        def base_like_dists(base_reel):
-            c = base_conditions(base_reel)
             return [
-                Distribution(criteria="freegame", quota=0.1, conditions=c["freegame"]),
-                Distribution(criteria="0", quota=0.4, win_criteria=0.0, conditions=c["zerowin"]),
-                Distribution(criteria="basegame", quota=0.5, conditions=c["basegame"]),
+                Distribution(
+                    criteria="wincap", quota=0.001, win_criteria=cap,
+                    conditions=base_cond({"force_wincap": True, "force_freegame": True, "scatter_triggers": {4: 1, 5: 2}}),
+                ),
+                Distribution(
+                    criteria="freegame", quota=0.1,
+                    conditions=base_cond({"force_freegame": True, "scatter_triggers": {3: 50, 4: 20, 5: 5}}),
+                ),
+                Distribution(criteria="0", quota=0.4, win_criteria=0.0, conditions=base_cond({})),
+                Distribution(criteria="basegame", quota=0.499, conditions=base_cond({})),
             ]
 
-        def buy_dists(scatter_triggers):
+        def buy_dists(scatter_triggers, cap):
             """A buy forces the feature every round. The base board is drawn from BR0 and plays a normal
             base cascade first (a base "?" still needs a win to activate); then `scatter_triggers` fixes
             how many scatters land, which selects the tier (and its feature reel). A single weighted
             trigger set implements Mystery Bonus's 45/45/10 tier roll."""
-            cond = {
+            cond = lambda extra: {
                 "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FR0": 1}},
                 "scatter_triggers": scatter_triggers,
                 "mult_values": {1: 1},
                 "force_wincap": False,
                 "force_freegame": True,
+                **extra,
             }
-            return [Distribution(criteria="freegame", quota=1.0, conditions=cond)]
+            return [
+                Distribution(criteria="wincap", quota=0.001, win_criteria=cap, conditions=cond({"force_wincap": True})),
+                Distribution(criteria="freegame", quota=0.999, conditions=cond({})),
+            ]
 
-        def mode(name, cost, is_buy, distributions):
-            # A stake-priced mode's whole round scales, so its max win (the end-round clamp) scales too:
-            # 25,000x the STAKE. Every other mode caps at 25,000x the base bet.
-            max_win = self.wincap * self.mode_bet_multiplier.get(name, 1)
+        def mode(name, cost, is_buy, dist_fn):
+            # A stake-priced mode's whole round scales, so its max win (the end-round clamp) and its
+            # forced-wincap target scale too: 25,000x the STAKE. Every other mode caps at 25,000x base.
+            cap = self.wincap * self.mode_bet_multiplier.get(name, 1)
             return BetMode(
-                name=name, cost=cost, rtp=self.rtp, max_win=max_win, auto_close_disabled=False,
-                is_feature=(not is_buy), is_buybonus=is_buy, distributions=distributions,
+                name=name, cost=cost, rtp=self.rtp, max_win=cap, auto_close_disabled=False,
+                is_feature=(not is_buy), is_buybonus=is_buy, distributions=dist_fn(cap),
             )
 
         self.bet_modes = [
-            mode("base", 1.0, False, base_like_dists("BR0")),
+            mode("base", 1.0, False, lambda cap: base_like_dists("BR0", cap)),
             # 3X Chance (fee 3x): an ordinary base spin on a richer-scatter pool (BR0_chance3x). Pays
             # stay on the base bet; the price is a fee and the trigger rate is the tuned knob.
-            mode("chance3x", 3.0, False, base_like_dists("BR0_chance3x")),
+            mode("chance3x", 3.0, False, lambda cap: base_like_dists("BR0_chance3x", cap)),
             # Mystery Chance (stake 50x): base spins on a THINNED pool (BR0_mysteryChance) with a "?"
             # forced every spin (mode_forced_mystery). Priced as a STAKE (mode_bet_multiplier) — pays +
             # wincap scale x50, the cost cancels out of RTP, so the thinned reels alone price it.
-            mode("mysteryChance", 50.0, False, base_like_dists("BR0_mysteryChance")),
+            mode("mysteryChance", 50.0, False, lambda cap: base_like_dists("BR0_mysteryChance", cap)),
             # Bonus (100x): 3 scatters -> tier 1 (FR1, untilUpgrade).
-            mode("bonus", 100.0, True, buy_dists({3: 1})),
+            mode("bonus", 100.0, True, lambda cap: buy_dists({3: 1}, cap)),
             # Super Bonus (200x): 4 scatters -> tier 2 (FR0, persistent).
-            mode("super_bonus", 200.0, True, buy_dists({4: 1})),
+            mode("super_bonus", 200.0, True, lambda cap: buy_dists({4: 1}, cap)),
             # Mystery Bonus (500x): rolls the tier 45/45/10 -> tier 1/2/3 (FR1/FR0/FR3).
-            mode("mystery_bonus", 500.0, True, buy_dists({3: 45, 4: 45, 5: 10})),
+            mode("mystery_bonus", 500.0, True, lambda cap: buy_dists({3: 45, 4: 45, 5: 10}, cap)),
         ]

@@ -84,12 +84,15 @@ class GameStateOverride(GameExecutables):
         feature runs — whether rolled naturally or bought — determines its pool. Copy, never mutate:
         the conditions dict is shared config read concurrently across sim threads."""
         cond = super().get_current_distribution_conditions()
-        reel = getattr(self, "fs_feature_reel", None)
-        if reel and self.gametype == self.config.freegame_type and isinstance(cond, dict):
-            cond = dict(cond)
-            rw = dict(cond.get("reel_weights", {}))
-            rw[self.config.freegame_type] = {reel: 1}
-            cond["reel_weights"] = rw
+        if self.gametype == self.config.freegame_type and isinstance(cond, dict):
+            # The wincap criteria forces the max-win tail on the hot WCAP pool; every other feature runs
+            # on its tier reel (fs_feature_reel).
+            reel = "WCAP" if self.criteria == "wincap" else getattr(self, "fs_feature_reel", None)
+            if reel:
+                cond = dict(cond)
+                rw = dict(cond.get("reel_weights", {}))
+                rw[self.config.freegame_type] = {reel: 1}
+                cond["reel_weights"] = rw
         return cond
 
     def check_repeat(self):

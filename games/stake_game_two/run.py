@@ -22,8 +22,16 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
+    # Publish set: 100k/mode (approval's diversity requirement — STAKE_PORT.md Phase 5). A 20k pass
+    # already converged every mode to 0.967 and passed the 3-star gate (cost-normalized); this is the
+    # set that gets uploaded.
     num_sim_args = {
         "base": int(1e5),
+        "chance3x": int(1e5),
+        "mysteryChance": int(1e5),
+        "bonus": int(1e5),
+        "super_bonus": int(1e5),
+        "mystery_bonus": int(1e5),
     }
 
     run_conditions = {

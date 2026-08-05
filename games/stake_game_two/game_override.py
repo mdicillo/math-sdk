@@ -1,6 +1,6 @@
 from game_executables import GameExecutables
 from src.calculations.symbol import SymbolDefinition
-from src.events.events import fs_trigger_event
+from src.events.events import fs_trigger_event, reveal_event
 
 
 class GameStateOverride(GameExecutables):
@@ -14,6 +14,20 @@ class GameStateOverride(GameExecutables):
         self.upgrade_spent = False
         self.feature_ladder = 1
         self.locked_buy_count = None
+        # Stake multiplier for the active mode (Mystery Chance = 50; everything else 1).
+        self.bet_multiplier = self.config.mode_bet_multiplier.get(getattr(self, "betmode", None), 1)
+
+    def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter"):
+        """Draw the board, and for a forced-"?" mode (Mystery Chance) plant the guaranteed "?" BEFORE
+        the reveal event is emitted, so the reveal the client renders already shows it. Base game only —
+        the feature has its own wheel activation."""
+        forced = self.config.mode_forced_mystery.get(getattr(self, "betmode", None), 0)
+        if forced and emit_event and self.gametype == self.config.basegame_type:
+            super().draw_board(emit_event=False, trigger_symbol=trigger_symbol)
+            self.plant_forced_mystery(forced)
+            reveal_event(self)
+        else:
+            super().draw_board(emit_event=emit_event, trigger_symbol=trigger_symbol)
 
     def create_symbol_map(self):
         """Register the mystery "?" tile ("M"). The framework derives its symbol set from `paytable` +

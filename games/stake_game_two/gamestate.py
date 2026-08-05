@@ -22,6 +22,7 @@ class GameState(GameStateOverride):
             self.locked_buy_count = (
                 self.count_special_symbols("scatter") if self.get_current_betmode().get_buybonus() else None
             )
+            # (Mystery Chance's guaranteed "?" is planted inside draw_board, before the reveal is emitted.)
 
             # Base game: the ladder opens at 1x (reset_book); a "?" activates only on a winning drop.
             # Each winning tumble climbs the ladder +1 (update_global_mult), so drops pay 1x, 2x, 3x …,

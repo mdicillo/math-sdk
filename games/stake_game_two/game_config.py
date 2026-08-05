@@ -16,14 +16,18 @@ PORT STATUS — incremental milestones (mirrors how camp_deadwater was ported):
     ladder PERSISTENCE (t2/t3 carry; t1 resets until Upgrade), tier-3 OPENING wheel spin, flat +5
     RETRIGGER. Verified: wheel math 0 errors, boost lands on the same drop, t2/t3 ladders carry.
   - Milestone D (in progress): the six SDK bet modes + optimizer + full cert run.
-    * Built: base + the three BUYS — Bonus (100x/3-sc/t1), Super Bonus (200x/4-sc/t2), Mystery Bonus
-      (500x, scatter_triggers {3:45,4:45,5:10} rolls the tier). Tier is LOCKED to the bought count
-      (accumulation only upgrades a natural trigger). Feature reel is tier-driven (FR1/FR0/FR3) via
-      fs_feature_reel for natural AND bought features. Verified: tier mixes 100/100/(46/43/11).
-    * TODO: the two BOOST modes — 3X Chance (fee 3x, richer-scatter base reel) and Mystery Chance
-      (stake 50x, thinned base reel + a forced "?" every spin); their reel exports + a WCAP reel;
-      then game_optimization.py per-mode targets + the wincap distribution + full `make run` (Rust)
-      + volatility gate; lock certified MODE_RTP.
+    * Built — ALL SIX BET MODES: base; the two BOOSTS — 3X Chance (fee 3x, richer-scatter reel
+      BR0_chance3x) and Mystery Chance (stake 50x via mode_bet_multiplier: pays + wincap scale x50 and
+      the cost cancels out of RTP; thinned reel BR0_mysteryChance + a "?" forced on every base board);
+      and the three BUYS — Bonus (100x/3-sc/t1), Super Bonus (200x/4-sc/t2), Mystery Bonus (500x,
+      scatter_triggers {3:45,4:45,5:10} rolls the tier). A buy LOCKS its tier to the bought count;
+      feature reel is tier-driven (FR1/FR0/FR3) for natural AND bought features. Verified: tier mixes
+      100/100/(45/45/10); Mystery Chance x50 scaling + forced "?" on 100% of base boards; 3X richer
+      scatter (1.21 vs 0.86 per board).
+    * TODO (the full cert run): a WCAP reel + the wincap distributions; game_optimization.py per-mode
+      RTP targets; full `make run` (Rust optimizer, 100k/mode) + analysis + volatility gate; then lock
+      the certified MODE_RTP. NOTE the base-game refill still uses reelstrip continuation vs the TS
+      position-agnostic bag (feature refills are already faithful) — resolve during RTP tuning.
 
 Symbols use SDK codes: W = wild, S = scatter, M = mystery "?" (see reels/). H1-H4 / L1-L5 unchanged.
 
@@ -112,6 +116,9 @@ class GameConfig(Config):
             "FR0": "FR0.csv",
             "FR1": "FR_tier1.csv",
             "FR3": "FR_tier3.csv",
+            # Boost-mode base pools (Milestone D): 3X Chance = richer scatter, Mystery Chance = thinned.
+            "BR0_chance3x": "BR0_chance3x.csv",
+            "BR0_mysteryChance": "BR0_mysteryChance.csv",
         }
         self.reels = {}
         for r, f in reels.items():
@@ -155,6 +162,16 @@ class GameConfig(Config):
         # Encoded on the freegame trigger row {3:5,4:5,5:5}, so the SDK's update_fs_retrigger_amt yields
         # +5 for any count. Kept here too for readability / future use.
         self.retrigger_spins = 5
+
+        # --- Boost bet-mode metadata (Milestone D) --------------------------------------------------
+        # Per-mode STAKE multiplier. A 'stake'-priced boost (Mystery Chance) IS betting more: the whole
+        # round — pays AND the wincap — scales to N x the base bet, so the cost cancels out of RTP and
+        # the mode is priced purely by its own (thinned) reels. Every other mode pays on the base bet
+        # and treats its cost as a FEE (multiplier=1). See CASCADE_MYSTERY_REWORK.md §8.2. Applied in
+        # game_executables (win scaling) + evaluate_wincap (scaled cap).
+        self.mode_bet_multiplier = {"mysteryChance": 50}
+        # Guaranteed "?" planted on each base opening board for a mode (Mystery Chance = 1 per spin).
+        self.mode_forced_mystery = {"mysteryChance": 1}
 
         # --- Bet modes ------------------------------------------------------------------------------
         # Milestone D wires the base game + the three feature-entry BUYS (Bonus / Super Bonus / Mystery
@@ -212,13 +229,23 @@ class GameConfig(Config):
             return [Distribution(criteria="freegame", quota=1.0, conditions=cond)]
 
         def mode(name, cost, is_buy, distributions):
+            # A stake-priced mode's whole round scales, so its max win (the end-round clamp) scales too:
+            # 25,000x the STAKE. Every other mode caps at 25,000x the base bet.
+            max_win = self.wincap * self.mode_bet_multiplier.get(name, 1)
             return BetMode(
-                name=name, cost=cost, rtp=self.rtp, max_win=self.wincap, auto_close_disabled=False,
+                name=name, cost=cost, rtp=self.rtp, max_win=max_win, auto_close_disabled=False,
                 is_feature=(not is_buy), is_buybonus=is_buy, distributions=distributions,
             )
 
         self.bet_modes = [
             mode("base", 1.0, False, base_like_dists("BR0")),
+            # 3X Chance (fee 3x): an ordinary base spin on a richer-scatter pool (BR0_chance3x). Pays
+            # stay on the base bet; the price is a fee and the trigger rate is the tuned knob.
+            mode("chance3x", 3.0, False, base_like_dists("BR0_chance3x")),
+            # Mystery Chance (stake 50x): base spins on a THINNED pool (BR0_mysteryChance) with a "?"
+            # forced every spin (mode_forced_mystery). Priced as a STAKE (mode_bet_multiplier) — pays +
+            # wincap scale x50, the cost cancels out of RTP, so the thinned reels alone price it.
+            mode("mysteryChance", 50.0, False, base_like_dists("BR0_mysteryChance")),
             # Bonus (100x): 3 scatters -> tier 1 (FR1, untilUpgrade).
             mode("bonus", 100.0, True, buy_dists({3: 1})),
             # Super Bonus (200x): 4 scatters -> tier 2 (FR0, persistent).

@@ -16,6 +16,8 @@ if __name__ == "__main__":
     profiling = False
     num_sim_args = {
         "base": 2000,
+        "chance3x": 2000,
+        "mysteryChance": 2000,
         "bonus": 1000,
         "super_bonus": 1000,
         "mystery_bonus": 1000,

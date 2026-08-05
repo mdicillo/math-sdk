@@ -1,6 +1,9 @@
+import random
+
 from game_calculations import GameCalculations
 from src.calculations.ways import Ways
 from src.calculations.statistics import get_random_outcome
+from src.events.events import wincap_event
 
 
 class GameExecutables(GameCalculations):
@@ -27,6 +30,13 @@ class GameExecutables(GameCalculations):
         )
         # WILD flat pay (Milestone B): stacks on top of the ways wins the same wilds complete.
         self.add_wild_pay()
+        # Stake scaling (Milestone D): a 'stake'-priced mode (Mystery Chance) bets N x, so every pay
+        # scales N x — on top of the ladder. The cost then cancels out of RTP (mean pays x N, cost x N).
+        mult = getattr(self, "bet_multiplier", 1)
+        if mult != 1:
+            for w in self.win_data["wins"]:
+                w["win"] = round(w["win"] * mult, 2)
+            self.win_data["totalWin"] = round(self.win_data["totalWin"] * mult, 2)
         # Flag every winning cell (including the wilds that completed a win) so tumble_board removes
         # them on the next gravity step. Scatters and an inert "?" never win, so they are never flagged
         # — matching "SCATTER never tumbles".
@@ -78,6 +88,42 @@ class GameExecutables(GameCalculations):
             }
         )
         self.win_data["totalWin"] = round(self.win_data["totalWin"] + win, 2)
+
+    def evaluate_wincap(self) -> bool:
+        """Stop the cascade once the round reaches its wincap. Overridden to scale the cap by the mode's
+        stake multiplier: a 'stake' mode (Mystery Chance) can win up to 25,000x its 50x stake, i.e.
+        25,000 x 50 x the base bet — the same number of pays scale into, so the cap must scale with
+        them or it would clamp 50x too early."""
+        cap = self.config.wincap * getattr(self, "bet_multiplier", 1)
+        if self.win_manager.running_bet_win >= cap and not self.wincap_triggered:
+            self.wincap_triggered = True
+            wincap_event(self)
+            return True
+        return False
+
+    def plant_forced_mystery(self, count: int) -> None:
+        """Guarantee `count` mystery "?" on the current (opening) board — Mystery Chance's promise. Counts
+        the "?" already present and plants the rest on random non-scatter, non-mystery cells, never
+        overwriting a scatter. A forced "?" DISPLACES a paying symbol, which is the cost the stake buys.
+        Mirrors withForcedMystery in the provider. Opening board only (not cascade refills)."""
+        mystery = self.config.mystery_symbol
+        scatter = self.config.special_symbols["scatter"][0]
+        present = 0
+        open_cells = []
+        for reel in range(self.config.num_reels):
+            for row in range(len(self.board[reel])):
+                name = self.board[reel][row].name
+                if name == mystery:
+                    present += 1
+                elif name != scatter:
+                    open_cells.append((reel, row))
+        for _ in range(present, count):
+            if not open_cells:
+                break
+            pick = random.randrange(len(open_cells))
+            reel, row = open_cells.pop(pick)
+            self.board[reel][row] = self.create_symbol(mystery)
+        self.get_special_symbols_on_board()
 
     # --- Mystery "?" wheel (Milestone C) --------------------------------------------------------
     def evaluate_drop(self, always_activate: bool):

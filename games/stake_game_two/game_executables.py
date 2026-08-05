@@ -1,5 +1,6 @@
 from game_calculations import GameCalculations
 from src.calculations.ways import Ways
+from src.calculations.statistics import get_random_outcome
 
 
 class GameExecutables(GameCalculations):
@@ -77,3 +78,105 @@ class GameExecutables(GameCalculations):
             }
         )
         self.win_data["totalWin"] = round(self.win_data["totalWin"] + win, 2)
+
+    # --- Mystery "?" wheel (Milestone C) --------------------------------------------------------
+    def evaluate_drop(self, always_activate: bool):
+        """Evaluate one drop of a cascade, with the mystery wheel folded in at the LOCKED ordering
+        (docs/WHEEL_TIMING.md): each "?" spins the wheel FIRST — boosting the ladder — then the win
+        pays at the boosted ladder. The +1 per-tumble increment happens between drops (the caller).
+
+        `always_activate` is False in the base game (a "?" activates only on a drop that pays) and True
+        in free spins (a "?" always spins, even on a non-winning terminal drop, where its boost can
+        raise a ladder that persists into the next spin). Multiple "?" on one board each roll and
+        STACK (spin_board_wheels reads the running multiplier).
+        """
+        if self._wheel_enabled():
+            if always_activate or self._board_has_win():
+                self.spin_board_wheels()
+        # Evaluate + record at the (now boosted) ladder, add the WILD flat pay, flag winners to tumble.
+        self.get_ways_update_wins()
+
+    def _wheel_enabled(self) -> bool:
+        return bool(getattr(self.config, "wheel_results", None)) and getattr(self.config, "mystery_symbol", None)
+
+    def _wild_on_all_reels(self) -> bool:
+        wild = self.config.special_symbols["wild"][0]
+        return all(
+            any(self.board[r][row].name == wild for row in range(len(self.board[r])))
+            for r in range(self.config.num_reels)
+        )
+
+    def _board_has_win(self) -> bool:
+        """Does the current board pay anything (ways win or the flat WILD pay)? Probes at 1x — the
+        existence of a win is independent of the ladder. Used only for the base-game activation gate."""
+        probe = Ways.get_ways_data(self.config, self.board, global_multiplier=1, multiplier_strategy="global")
+        return probe["totalWin"] > 0 or self._wild_on_all_reels()
+
+    def roll_wheel(self) -> dict:
+        """Roll one wheel result from wheel_results. In an `untilUpgrade` free round the +5 ADD slot is
+        swapped for the Upgrade (persistence flip, no boost) until an upgrade is spent, after which it
+        reverts to +5 (Stage 8). Mirrors toUpgradeSlot + the provider's upgrade-then-plain roller."""
+        results = self.config.wheel_results
+        idx = int(get_random_outcome({i: r["weight"] for i, r in enumerate(results)}))
+        slot = dict(results[idx])
+        wants_upgrade = (
+            self.gametype == self.config.freegame_type
+            and getattr(self, "fs_persistence", "persistent") == "untilUpgrade"
+            and not getattr(self, "upgrade_spent", False)
+        )
+        if wants_upgrade and slot["kind"] == "add" and slot["value"] == 5:
+            slot = {"kind": "upgrade", "value": 0}
+        return slot
+
+    def apply_wheel(self, multiplier: int, slot: dict) -> int:
+        """Apply a wheel slot to the ladder: 'add' bumps by value, 'mult' multiplies, 'upgrade' leaves
+        it unchanged (its effect is the persistence flip, handled by the caller)."""
+        if slot["kind"] == "add":
+            return multiplier + slot["value"]
+        if slot["kind"] == "mult":
+            return multiplier * slot["value"]
+        return multiplier  # 'upgrade'
+
+    def spin_board_wheels(self) -> None:
+        """Spin the wheel once for every "?" on the board, in reel-row order, each STACKING on the
+        previous (it reads the running self.global_multiplier). Each "?" is consumed — flagged to
+        tumble away so it cannot spin again. An Upgrade flips the feature to persistent."""
+        mystery = self.config.mystery_symbol
+        for reel in range(self.config.num_reels):
+            for row in range(len(self.board[reel])):
+                if self.board[reel][row].name != mystery:
+                    continue
+                slot = self.roll_wheel()
+                frm = self.global_multiplier
+                self.global_multiplier = self.apply_wheel(frm, slot)
+                if slot["kind"] == "upgrade":
+                    self.fs_persistent = True
+                    self.upgrade_spent = True
+                self.board[reel][row].explode = True  # consumed
+                self._emit_wheel_spin(reel, row, slot, frm, self.global_multiplier)
+
+    def run_opening_wheels(self) -> None:
+        """Free wheel spins at feature entry (tier 3's opening roll). Cell-less (reel=-1). Boosts the
+        carried feature ladder before spin 1; on a persistent tier that boost carries the whole run."""
+        for _ in range(int(getattr(self, "fs_opening_wheel_spins", 0))):
+            slot = self.roll_wheel()
+            frm = self.feature_ladder
+            self.feature_ladder = self.apply_wheel(frm, slot)
+            if slot["kind"] == "upgrade":
+                self.fs_persistent = True
+                self.upgrade_spent = True
+            self._emit_wheel_spin(-1, -1, slot, frm, self.feature_ladder)
+
+    def _emit_wheel_spin(self, reel: int, row: int, slot: dict, frm: int, to: int) -> None:
+        """Custom book event: one "?" activation. Informational for the client; the RTP-bearing effect
+        is already in the boosted ladder that the following win pays at."""
+        self.book.add_event(
+            {
+                "index": len(self.book.events),
+                "type": "wheelSpin",
+                "cell": {"reel": reel, "row": row},
+                "result": slot,
+                "from": frm,
+                "to": to,
+            }
+        )

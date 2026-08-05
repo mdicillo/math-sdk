@@ -9,11 +9,14 @@ The game is a 5x3, 243-ways CASCADING (tumble) slot with a running win-multiplie
 PORT STATUS — incremental milestones (mirrors how camp_deadwater was ported):
   - Milestone A (built): grid, paytable, reels, wincap, base ways evaluation + the cascade (tumble)
     loop, in base and free spins. Units verified against the TS model (win == paytable*ways*100).
-  - Milestone B (built): the +1-per-winning-tumble LADDER (global_multiplier, reset each base spin
-    and — for now — each free spin) + WILD's flat 5x pay (all-5-reels, once, x ladder, stacks).
-  - Milestone C: the "?" wheel, the three tiers, persistence, retrigger (+5), tier-3 opening spin.
-  - Milestone D: the six bet modes (base, 3X Chance, Mystery Chance, Bonus, Super Bonus, Mystery
-    Bonus) + optimizer + full cert run.
+  - Milestone B (built): the +1-per-winning-tumble LADDER (global_multiplier) + WILD's flat 5x pay
+    (all-5-reels, once, x ladder, stacks).
+  - Milestone C (built): the "?" WHEEL (boost-then-pay ordering; base activates on a win, free always;
+    stacked "?"; +5->Upgrade in a 3-scatter round until spent), the three TIERS by scatter count,
+    ladder PERSISTENCE (t2/t3 carry; t1 resets until Upgrade), tier-3 OPENING wheel spin, flat +5
+    RETRIGGER. Verified: wheel math 0 errors, boost lands on the same drop, t2/t3 ladders carry.
+  - Milestone D: the six SDK bet modes (base + 3X Chance, Mystery Chance, Bonus, Super Bonus, Mystery
+    Bonus) + per-tier feature reels for the buys + optimizer + full cert run; lock certified MODE_RTP.
 
 Symbols use SDK codes: W = wild, S = scatter, M = mystery "?" (see reels/). H1-H4 / L1-L5 unchanged.
 
@@ -109,6 +112,42 @@ class GameConfig(Config):
 
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
+
+        # --- Mystery "?" wheel (Milestone C) — WHEEL_RESULTS from gameConfig.ts ----------------------
+        # Each slot: kind ('add' bumps the ladder by value / 'mult' multiplies it) + relative weight.
+        # In a 3-scatter (untilUpgrade) free round the +5 ADD slot becomes 'upgrade' (no boost; flips
+        # the ladder persistent) UNTIL an upgrade lands, then it reverts to +5 (Stage 8). See
+        # game_executables.roll_wheel.
+        self.wheel_results = [
+            {"kind": "add", "value": 5, "weight": 40},
+            {"kind": "add", "value": 10, "weight": 25},
+            {"kind": "add", "value": 20, "weight": 15},
+            {"kind": "add", "value": 50, "weight": 8},
+            {"kind": "add", "value": 100, "weight": 2},
+            {"kind": "mult", "value": 2, "weight": 10},
+        ]
+        # Base game / Mystery Chance: a "?" activates only on a WINNING drop. Free spins: always.
+        self.mystery_activates_on_win = True
+
+        # --- Free-spins tiers (Milestone C), keyed by SCATTER count (3/4/5) --------------------------
+        # From BONUS_LEVELS in gameConfig.ts. `spins` (the initial award) lives in freespin_triggers;
+        # this carries the rest. increment is 1 for every tier post-rework, applied by update_global_mult.
+        #   persistence: 'persistent' (t2/t3, ladder carries the whole feature) or 'untilUpgrade' (t1,
+        #     ladder resets each spin until the wheel's Upgrade lands, then persists).
+        #   opening_wheel_spins: free wheel rolls at feature entry (t3 = 1).
+        #   feature_reel: the per-tier feature strip a BUY draws from (FR1 t1 / FR0 shared t2 / FR3 t3).
+        #     Natural triggers use FR0 for now — the per-tier reels are wired to the buys in Milestone D
+        #     (a natural 5-scatter is vanishingly rare, so this costs ~nothing; the tier-3 EV that
+        #     matters is bought via Mystery Bonus, which WILL draw FR3). Mirrors camp_deadwater.
+        self.bonus_tiers = {
+            3: {"level": 1, "persistence": "untilUpgrade", "opening_wheel_spins": 0, "feature_reel": "FR1"},
+            4: {"level": 2, "persistence": "persistent", "opening_wheel_spins": 0, "feature_reel": "FR0"},
+            5: {"level": 3, "persistence": "persistent", "opening_wheel_spins": 1, "feature_reel": "FR3"},
+        }
+        # Retrigger awards a flat +5 spins for landing >=3 scatters during the feature (Rage Quit rule).
+        # Encoded on the freegame trigger row {3:5,4:5,5:5}, so the SDK's update_fs_retrigger_amt yields
+        # +5 for any count. Kept here too for readability / future use.
+        self.retrigger_spins = 5
 
         # --- Milestone A bet mode: base only. Distributions mirror the reference cascade games
         # (freegame / zero-win / basegame). The wincap distribution is deliberately OMITTED here: the

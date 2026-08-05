@@ -16,6 +16,9 @@ if __name__ == "__main__":
     profiling = False
     num_sim_args = {
         "base": 2000,
+        "bonus": 1000,
+        "super_bonus": 1000,
+        "mystery_bonus": 1000,
     }
     config = GameConfig()
     gamestate = GameState(config)

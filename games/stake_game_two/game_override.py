@@ -1,9 +1,19 @@
 from game_executables import GameExecutables
 from src.calculations.symbol import SymbolDefinition
+from src.events.events import fs_trigger_event
 
 
 class GameStateOverride(GameExecutables):
     """Override / extend universal state.py behaviour for this game."""
+
+    def reset_book(self):
+        """Clear per-round feature state so a stale tier/reel can't leak from a previous simulation."""
+        super().reset_book()
+        self.fs_feature_reel = None
+        self.fs_persistent = False
+        self.upgrade_spent = False
+        self.feature_ladder = 1
+        self.locked_buy_count = None
 
     def create_symbol_map(self):
         """Register the mystery "?" tile ("M"). The framework derives its symbol set from `paytable` +
@@ -30,19 +40,43 @@ class GameStateOverride(GameExecutables):
 
     def update_freespin_amount(self, scatter_key: str = "scatter"):
         """Set the feature TIER + initial spins at the trigger. Tier is fixed by the scatter count
-        (3/4/5 -> t1/t2/t3) and drives persistence, the tier-3 opening wheel spin, and (via the buys,
-        Milestone D) the feature reel. The ladder itself always climbs +1 per tumble. Retriggers add
-        spins but never change the tier."""
+        (3/4/5 -> t1/t2/t3) and drives persistence, the tier-3 opening wheel spin, and the per-tier
+        FEATURE REEL (FR1/FR0/FR3) — used for natural triggers AND buys alike (the TS provider draws
+        natural features from the per-tier pool too). The ladder always climbs +1 per tumble.
+        Retriggers add spins but never change the tier or the reel."""
         count = self.count_special_symbols(scatter_key)
+        # A buy is locked to its bought tier (the forced opening count); a natural trigger uses the
+        # accumulated final count (accumulation is what lets a cascade upgrade the tier).
+        if self.get_current_betmode().get_buybonus() and getattr(self, "locked_buy_count", None):
+            count = self.locked_buy_count
+        count = max(3, min(5, count))
         tier = self.config.bonus_tiers[count]
         self.fs_tier = tier["level"]
         self.fs_persistence = tier["persistence"]
         self.fs_opening_wheel_spins = tier["opening_wheel_spins"]
-        super().update_freespin_amount(scatter_key)  # sets tot_fs from freespin_triggers + emits trigger
-        # Enrich the trigger event so a client can build its bonus start from one event.
+        self.fs_feature_reel = tier["feature_reel"]
+        # Set the initial spins from the (locked/accumulated) tier count and emit the trigger. Not via
+        # super(), which would re-read the final accumulated count and mis-size a buy's award.
+        self.tot_fs = self.config.freespin_triggers[self.gametype][count]
+        basegame_trigger = self.gametype == self.config.basegame_type
+        fs_trigger_event(self, basegame_trigger=basegame_trigger, freegame_trigger=not basegame_trigger)
         ev = self.book.events[-1]
         ev["level"] = self.fs_tier
         ev["count"] = int(count)
+
+    def get_current_distribution_conditions(self) -> dict:
+        """Select the per-tier FEATURE reel for free-spin board draws. Returns a shallow copy with
+        reel_weights[freegame] pointed at this feature's tier reel (fs_feature_reel), so the tier a
+        feature runs — whether rolled naturally or bought — determines its pool. Copy, never mutate:
+        the conditions dict is shared config read concurrently across sim threads."""
+        cond = super().get_current_distribution_conditions()
+        reel = getattr(self, "fs_feature_reel", None)
+        if reel and self.gametype == self.config.freegame_type and isinstance(cond, dict):
+            cond = dict(cond)
+            rw = dict(cond.get("reel_weights", {}))
+            rw[self.config.freegame_type] = {reel: 1}
+            cond["reel_weights"] = rw
+        return cond
 
     def check_repeat(self):
         """Verify the simulation satisfied its distribution/criteria constraints; if not, resample.

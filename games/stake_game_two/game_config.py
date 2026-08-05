@@ -15,8 +15,15 @@ PORT STATUS — incremental milestones (mirrors how camp_deadwater was ported):
     stacked "?"; +5->Upgrade in a 3-scatter round until spent), the three TIERS by scatter count,
     ladder PERSISTENCE (t2/t3 carry; t1 resets until Upgrade), tier-3 OPENING wheel spin, flat +5
     RETRIGGER. Verified: wheel math 0 errors, boost lands on the same drop, t2/t3 ladders carry.
-  - Milestone D: the six SDK bet modes (base + 3X Chance, Mystery Chance, Bonus, Super Bonus, Mystery
-    Bonus) + per-tier feature reels for the buys + optimizer + full cert run; lock certified MODE_RTP.
+  - Milestone D (in progress): the six SDK bet modes + optimizer + full cert run.
+    * Built: base + the three BUYS — Bonus (100x/3-sc/t1), Super Bonus (200x/4-sc/t2), Mystery Bonus
+      (500x, scatter_triggers {3:45,4:45,5:10} rolls the tier). Tier is LOCKED to the bought count
+      (accumulation only upgrades a natural trigger). Feature reel is tier-driven (FR1/FR0/FR3) via
+      fs_feature_reel for natural AND bought features. Verified: tier mixes 100/100/(46/43/11).
+    * TODO: the two BOOST modes — 3X Chance (fee 3x, richer-scatter base reel) and Mystery Chance
+      (stake 50x, thinned base reel + a forced "?" every spin); their reel exports + a WCAP reel;
+      then game_optimization.py per-mode targets + the wincap distribution + full `make run` (Rust)
+      + volatility gate; lock certified MODE_RTP.
 
 Symbols use SDK codes: W = wild, S = scatter, M = mystery "?" (see reels/). H1-H4 / L1-L5 unchanged.
 
@@ -149,11 +156,16 @@ class GameConfig(Config):
         # +5 for any count. Kept here too for readability / future use.
         self.retrigger_spins = 5
 
-        # --- Milestone A bet mode: base only. Distributions mirror the reference cascade games
-        # (freegame / zero-win / basegame). The wincap distribution is deliberately OMITTED here: the
-        # 25,000x cap is only reachable once the ladder + wheel exist (Milestones B/C), so forcing it now
-        # would loop forever in check_repeat. It is added with those mechanics. mult_values is a {1:1}
-        # placeholder (the ladder is neutralized in this milestone).
+        # --- Bet modes ------------------------------------------------------------------------------
+        # Milestone D wires the base game + the three feature-entry BUYS (Bonus / Super Bonus / Mystery
+        # Bonus), following the TS build order. The two per-spin boost modes (3X Chance / Mystery
+        # Chance) are a focused follow-up — they need their own base reel pools (a reweighted scatter /
+        # thinned reels) + forced-"?" + stake pricing.
+        #
+        # The FEATURE reel is NOT chosen here — it is selected per rolled/bought tier via fs_feature_reel
+        # (game_override.get_current_distribution_conditions). reel_weights[freegame] below is only a
+        # fallback. The wincap distribution is still OMITTED (the max-win tail needs a dedicated WCAP
+        # reel + the optimizer, both part of the full cert run); run_debug is sims-only.
         def base_conditions(base_reel):
             return {
                 "freegame": {
@@ -185,15 +197,32 @@ class GameConfig(Config):
                 Distribution(criteria="basegame", quota=0.5, conditions=c["basegame"]),
             ]
 
+        def buy_dists(scatter_triggers):
+            """A buy forces the feature every round. The base board is drawn from BR0 and plays a normal
+            base cascade first (a base "?" still needs a win to activate); then `scatter_triggers` fixes
+            how many scatters land, which selects the tier (and its feature reel). A single weighted
+            trigger set implements Mystery Bonus's 45/45/10 tier roll."""
+            cond = {
+                "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FR0": 1}},
+                "scatter_triggers": scatter_triggers,
+                "mult_values": {1: 1},
+                "force_wincap": False,
+                "force_freegame": True,
+            }
+            return [Distribution(criteria="freegame", quota=1.0, conditions=cond)]
+
+        def mode(name, cost, is_buy, distributions):
+            return BetMode(
+                name=name, cost=cost, rtp=self.rtp, max_win=self.wincap, auto_close_disabled=False,
+                is_feature=(not is_buy), is_buybonus=is_buy, distributions=distributions,
+            )
+
         self.bet_modes = [
-            BetMode(
-                name="base",
-                cost=1.0,
-                rtp=self.rtp,
-                max_win=self.wincap,
-                auto_close_disabled=False,
-                is_feature=True,
-                is_buybonus=False,
-                distributions=base_like_dists("BR0"),
-            ),
+            mode("base", 1.0, False, base_like_dists("BR0")),
+            # Bonus (100x): 3 scatters -> tier 1 (FR1, untilUpgrade).
+            mode("bonus", 100.0, True, buy_dists({3: 1})),
+            # Super Bonus (200x): 4 scatters -> tier 2 (FR0, persistent).
+            mode("super_bonus", 200.0, True, buy_dists({4: 1})),
+            # Mystery Bonus (500x): rolls the tier 45/45/10 -> tier 1/2/3 (FR1/FR0/FR3).
+            mode("mystery_bonus", 500.0, True, buy_dists({3: 45, 4: 45, 5: 10})),
         ]

@@ -16,6 +16,12 @@ class GameState(GameStateOverride):
         while self.repeat:
             self.reset_book()
             self.draw_board()
+            # A BUY locks its tier to the scatters FORCED on the opening board — accumulation during the
+            # base cascade upgrades a natural trigger but never a buy (TS: level = boughtLevel). Capture
+            # the forced count before the cascade can add more.
+            self.locked_buy_count = (
+                self.count_special_symbols("scatter") if self.get_current_betmode().get_buybonus() else None
+            )
 
             # Base game: the ladder opens at 1x (reset_book); a "?" activates only on a winning drop.
             # Each winning tumble climbs the ladder +1 (update_global_mult), so drops pay 1x, 2x, 3x …,

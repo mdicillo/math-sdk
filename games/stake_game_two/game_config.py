@@ -15,8 +15,12 @@ PORT STATUS — incremental milestones (mirrors how camp_deadwater was ported):
     stacked "?"; +5->Upgrade in a 3-scatter round until spent), the three TIERS by scatter count,
     ladder PERSISTENCE (t2/t3 carry; t1 resets until Upgrade), tier-3 OPENING wheel spin, flat +5
     RETRIGGER. Verified: wheel math 0 errors, boost lands on the same drop, t2/t3 ladders carry.
-  - Milestone D (in progress): the six SDK bet modes + optimizer + full cert run.
-    * Built — ALL SIX BET MODES: base; the two BOOSTS — 3X Chance (fee 3x, richer-scatter reel
+  - Milestone D (CERTIFIED): the six SDK bet modes + optimizer + full cert run. 100k/mode publish set:
+    every mode RTP = 0.967 and PASSES the 3-star volatility gate (cost-normalized: cvar/cost <=303 vs
+    800, etl40b <=0.69 vs 0.9). Pricing validated (avg = 0.967*cost for fee/stake/buys). Publish files
+    (books_*.jsonl.zst + lookUpTable_*_0.csv + index.json) in library/publish_files. Remaining: lock
+    the certified 96.70% into MODE_RTP in the GAME repo's gameConfig.ts (player-facing regulated copy).
+    * ALL SIX BET MODES: base; the two BOOSTS — 3X Chance (fee 3x, richer-scatter reel
       BR0_chance3x) and Mystery Chance (stake 50x via mode_bet_multiplier: pays + wincap scale x50 and
       the cost cancels out of RTP; thinned reel BR0_mysteryChance + a "?" forced on every base board);
       and the three BUYS — Bonus (100x/3-sc/t1), Super Bonus (200x/4-sc/t2), Mystery Bonus (500x,

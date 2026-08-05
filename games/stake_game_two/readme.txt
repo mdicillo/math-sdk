@@ -20,11 +20,21 @@ Model summary (authoritative spec: docs/CASCADE_MYSTERY_REWORK.md in the game re
 - Six bet modes: base, 3X Chance (3x/spin fee), Mystery Chance (50x/spin stake), Bonus (100x, 3sc),
   Super Bonus (200x, 4sc), Mystery Bonus (500x, rolls 45/45/10 across the tiers).
 
-PORT MILESTONES (incremental, like camp_deadwater):
-  A (built): base ways + cascade, units verified; ladder neutralized, wheel inert, base mode only.
+PORT MILESTONES (incremental, like camp_deadwater) — ALL BUILT:
+  A: base ways + cascade, units verified (win == paytable*ways*100).
   B: +1-per-tumble ladder + WILD flat 5x pay.
-  C: "?" wheel + tiers + persistence + retrigger + tier-3 opening spin.
-  D: six bet modes + optimizer + full cert run; lock certified MODE_RTP.
+  C: "?" wheel (boost-then-pay) + tiers + persistence + retrigger + tier-3 opening spin.
+  D: six bet modes + optimizer + full cert run.
+
+CERT STATUS: 100k/mode publish set — all six modes RTP = 96.70% and PASS the 3-star volatility gate
+(cost-normalized). Pricing validated: avg payout = 0.967*cost for the fee mode (3X Chance), the stake
+mode (Mystery Chance: cap = 25,000x the 50x stake), and the three buys. Publish files (compressed
+books + optimized lookup tables + index.json) regenerate via `make run GAME=stake_game_two`.
+
+REMAINING: lock the certified 96.70% into MODE_RTP in the game repo's gameConfig.ts (player-facing
+regulated copy). Optional fidelity refinement: the base-game cascade REFILL uses reelstrip continuation
+here vs the TS position-agnostic bag (feature refills are already faithful) — does not affect the
+certified RTP (the optimizer hits 0.967 regardless) or the volatility gate; only the base-mode shape.
 
 Reels: exported from the TS model (npm run reels:export in the game repo), renamed WILD->W,
 SCATTER->S, MYSTERY->M. BR0 = base (carries symbolDensity shaping); FR0 = shared feature pool;

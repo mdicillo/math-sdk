@@ -18,8 +18,13 @@ if __name__ == "__main__":
     profiling = False
 
     num_sim_args = {
-        "base": int(1e4),
-        "bonus": int(1e4),
+        "base": int(1e5),
+        "base_bonuschance": int(1e5),
+        "base_wheelchance": int(1e5),
+        "base_bonuschance_wheelchance": int(1e5),
+        "bonus_1": int(1e5),
+        "bonus_2": int(1e5),
+        "bonus_mystery": int(1e5),
     }
 
     run_conditions = {

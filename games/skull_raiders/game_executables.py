@@ -26,6 +26,9 @@ class GameExecutables(GameCalculations):
         self.draw_board(emit_event=False)  # land, no reveal yet
         self._strip_specials()  # scatters + natural wilds -> random lows (the wheel makes the win)
         mode = "attack" if random.random() < self.config.wheel_attack_share else "steal"
+        # Tag the sim so the optimizer can bucket wheel rounds into the "wheel" criteria
+        # (search_conditions={"symbol": "wheel"}); force_info.md — record() drives force_record_<mode>.json.
+        self.record({"symbol": "wheel", "kind": mode, "gametype": self.gametype})
         if mode == "attack":
             self._break_line_wins()  # land pays nothing; only the redrawn lines pay
             reveal_event(self)

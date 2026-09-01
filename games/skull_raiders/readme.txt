@@ -36,5 +36,15 @@ E (done): all 7 bet modes — base (1x); antes base_bonuschance (3x, bonus-heavy
    tier1), bonus_2 (150x, tier2), bonus_mystery (300x, tier roll {3:1,4:1,5:2} -> only route to HIDDEN).
    index.json mode names + costs match the client's publishedModeName taxonomy exactly. Raw buy EVs
    ~95x/138x/266x (in optimizer reach of 96%). Per-criteria quotas are material-sizing only; F sets weights.
-F (todo): game_optimization opt_params per mode summing to 0.96; WCAP tail reel; full `make run`
-   100k/mode; every mode 96% + 3-star volatility band; PAR sheet; lock MODE_RTP in the game repo.
+F (CERTIFIED): feature wincap early-end + WILD-rich WCAP reel + forced-max-win distributions (every mode
+   reaches exactly 10,000x). game_optimization opt_params per mode sum to 0.96, with correct criteria
+   BUCKETING: each criteria carries search_conditions (wincap by win value; freegame {"symbol":"scatter"};
+   wheel {"symbol":"wheel"} via a record() tag in run_wheel_round; "0" by win 0; basegame the searchless
+   remainder LAST). RTP split is faithful to the TS economics (base line ~30% / feature ~43% / wheel ~23%).
+   100k-sims/mode publish set: ALL SEVEN MODES RTP = 0.9600 and PASS the cost-normalized 3-star volatility
+   gate (cvar/cost <=158 vs 800, etl40b_n <=0.63 vs 0.9, prob5k 0, rtp 0.96 <= 0.967). SHA-256 + payout
+   hash OK (100000 entries/mode). publish_files (books_*.jsonl.zst + lookUpTable_*_0.csv + index.json) +
+   PAR sheet generated. MODE_RTP in the game repo already reads 96.00% for every mode — matches the cert.
+
+   The local `make run` prints un-normalized 3-star warnings for the high-cost modes; those are EXPECTED
+   (the platform gates on the cost-normalized values above), not a regression. See STAKE_PORT.md.

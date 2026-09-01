@@ -37,6 +37,12 @@ class GameState(GameStateOverride):
 
             self.evaluate_lines_board()
 
+            # Wincap: once the round reaches 10,000x, update_final_win clamps it to exactly the cap and
+            # the feature ends immediately (no more spins, no retrigger). gameConfig.ts generateBonus.
+            if self.wincap_triggered:
+                self.win_manager.update_gametype_wins(self.gametype)
+                break
+
             if self.check_fs_condition():
                 self.update_fs_retrigger_amt()
 

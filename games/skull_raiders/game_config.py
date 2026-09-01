@@ -102,6 +102,7 @@ class GameConfig(Config):
             "FR0": "FR0.csv",          # shared feature pool (natural triggers, WILD weight 13.5)
             "FRB": "FR_buy.csv",       # bought tiers 1 & 2 feature pool (WILD weight 14)
             "FR3": "FR_tier3.csv",     # tier 3 / HIDDEN feature pool (WILD weight 22)
+            "WCAP": "WCAP.csv",        # wincap max-win pool (WILD-rich, SDK cert only)
         }
         self.reels = {}
         for r, f in reels.items():
@@ -196,6 +197,24 @@ class GameConfig(Config):
         buy2_condition = buy_cond({4: 1})
         mystery_condition = buy_cond({3: 1, 4: 1, 5: 2})
 
+        def wincap_cond(scatter_triggers):
+            """Force the max-win tail: a feature on the WILD-rich WCAP pool (repointed at runtime) that
+            reaches the 10,000x cap. `scatter_triggers` picks the tier the round runs at."""
+            return {
+                "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"WCAP": 1}},
+                "scatter_triggers": dict(scatter_triggers),
+                "mult_values": mult_values,
+                "force_wincap": True,
+                "force_freegame": True,
+            }
+
+        # Base/ante max-win comes from a natural (tier-2-clamped) feature on WCAP; each buy caps at its
+        # own tier; Mystery at tier 3 (its best route to the cap).
+        wincap_natural = wincap_cond({4: 1})   # tier 2 (natural max)
+        wincap_t1 = wincap_cond({3: 1})
+        wincap_t2 = wincap_cond({4: 1})
+        wincap_t3 = wincap_cond({5: 1})
+
         # NOTE (through Milestone E): the `wincap` forced-max-win distribution is intentionally omitted
         # until Milestone F, when a WCAP feature reel + a feature that can actually reach 10,000x exist.
         # Forcing it now makes `check_repeat` resample forever (no round can hit the cap yet).
@@ -207,6 +226,7 @@ class GameConfig(Config):
         # per-criteria quotas below just size the book material; the optimizer sets the final weights (F).
         def base_like(freegame_q, wheel_q, zero_q, basegame_q):
             return [
+                Distribution(criteria="wincap", quota=0.002, win_criteria=self.wincap, conditions=wincap_natural),
                 Distribution(criteria="freegame", quota=freegame_q, conditions=freegame_condition),
                 Distribution(criteria="wheel", quota=wheel_q, conditions=wheel_condition),
                 Distribution(criteria="0", quota=zero_q, win_criteria=0.0, conditions=zerowin_condition),
@@ -217,17 +237,20 @@ class GameConfig(Config):
             return BetMode(name=name, cost=cost, rtp=self.rtp, max_win=self.wincap,
                            auto_close_disabled=False, is_feature=True, is_buybonus=False, distributions=dists)
 
-        def buy_mode(name, cost, condition):
+        def buy_mode(name, cost, condition, wincap_condition):
             return BetMode(name=name, cost=cost, rtp=self.rtp, max_win=self.wincap,
                            auto_close_disabled=False, is_feature=False, is_buybonus=True,
-                           distributions=[Distribution(criteria="freegame", quota=1.0, conditions=condition)])
+                           distributions=[
+                               Distribution(criteria="wincap", quota=0.002, win_criteria=self.wincap, conditions=wincap_condition),
+                               Distribution(criteria="freegame", quota=0.998, conditions=condition),
+                           ])
 
         self.bet_modes = [
             base_mode("base", 1.0, base_like(0.10, 0.05, 0.35, 0.50)),
             base_mode("base_bonuschance", 3.0, base_like(0.50, 0.05, 0.15, 0.30)),
             base_mode("base_wheelchance", 5.0, base_like(0.08, 0.40, 0.22, 0.30)),
             base_mode("base_bonuschance_wheelchance", 8.0, base_like(0.40, 0.30, 0.10, 0.20)),
-            buy_mode("bonus_1", 100.0, buy1_condition),
-            buy_mode("bonus_2", 150.0, buy2_condition),
-            buy_mode("bonus_mystery", 300.0, mystery_condition),
+            buy_mode("bonus_1", 100.0, buy1_condition, wincap_t1),
+            buy_mode("bonus_2", 150.0, buy2_condition, wincap_t2),
+            buy_mode("bonus_mystery", 300.0, mystery_condition, wincap_t3),
         ]

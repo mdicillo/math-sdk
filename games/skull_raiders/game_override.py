@@ -93,7 +93,9 @@ class GameStateOverride(GameExecutables):
         """
         cond = super().get_current_distribution_conditions()
         if self.gametype == self.config.freegame_type and isinstance(cond, dict):
-            reel = getattr(self, "fs_feature_reel", None)
+            # The wincap criteria forces the max-win tail on the WILD-rich WCAP pool; every other feature
+            # runs on its tier reel (fs_feature_reel).
+            reel = "WCAP" if self.criteria == "wincap" else getattr(self, "fs_feature_reel", None)
             if reel:
                 cond = dict(cond)
                 rw = dict(cond.get("reel_weights", {}))

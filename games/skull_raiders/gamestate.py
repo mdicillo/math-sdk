@@ -1,0 +1,51 @@
+from game_override import GameStateOverride
+
+
+class GameState(GameStateOverride):
+    """Handles game logic and events for a single simulation number/game-round."""
+
+    def run_spin(self, sim, simulation_seed=None):
+        self.reset_seed(sim)
+        self.repeat = True
+        while self.repeat:
+            self.reset_book()
+
+            if self.get_current_distribution_conditions().get("force_wheel"):
+                # A raid-wheel round replaces the normal line spin: the wheel builds the whole win, the
+                # land carries no scatter, so there is no free-spins trigger.
+                self.run_wheel_round()
+                self.win_manager.update_gametype_wins(self.gametype)
+            else:
+                self.draw_board()
+
+                # Evaluate wins, update wallet, transmit events
+                self.evaluate_lines_board()
+
+                self.win_manager.update_gametype_wins(self.gametype)
+                if self.check_fs_condition():
+                    self.run_freespin_from_base()
+
+            self.evaluate_finalwin()
+            self.check_repeat()
+        self.imprint_wins()
+
+    def run_freespin(self):
+        self.reset_fs_spin()
+        while self.fs < self.tot_fs:
+            self.update_freespin()
+            self.draw_board()
+
+            self.evaluate_lines_board()
+
+            # Wincap: once the round reaches 10,000x, update_final_win clamps it to exactly the cap and
+            # the feature ends immediately (no more spins, no retrigger). gameConfig.ts generateBonus.
+            if self.wincap_triggered:
+                self.win_manager.update_gametype_wins(self.gametype)
+                break
+
+            if self.check_fs_condition():
+                self.update_fs_retrigger_amt()
+
+            self.win_manager.update_gametype_wins(self.gametype)
+
+        self.end_freespin()

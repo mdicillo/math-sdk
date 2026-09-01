@@ -152,7 +152,7 @@ class GameExecutables(GameCalculations):
             self._steal_present_cells,
             wd["totalWin"],
             factor,
-            [{"symbol": w["symbol"], "kind": w["kind"], "win": int(round(w["win"] * 100, 0))} for w in wd["wins"]],
+            [{"symbol": w["symbol"], "count": w["kind"], "win": int(round(w["win"] * 100, 0))} for w in wd["wins"]],
         )
         if wd["totalWin"] > 0:
             win_info_event(self)

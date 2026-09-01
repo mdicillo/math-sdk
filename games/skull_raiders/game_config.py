@@ -97,13 +97,28 @@ class GameConfig(Config):
 
         # Reels — base (BR0), shared feature (FR0), tier-3 feature (FR_tier3, WILD-rich). Exported from
         # the TS reel model (scatterDensity shaping already baked in), WILD->W / BONUS->S.
-        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "FR3": "FR_tier3.csv"}
+        reels = {
+            "BR0": "BR0.csv",          # base game
+            "FR0": "FR0.csv",          # shared feature pool (natural triggers, WILD weight 13.5)
+            "FRB": "FR_buy.csv",       # bought tiers 1 & 2 feature pool (WILD weight 14)
+            "FR3": "FR_tier3.csv",     # tier 3 / HIDDEN feature pool (WILD weight 22)
+        }
         self.reels = {}
         for r, f in reels.items():
             self.reels[r] = self.read_reels_csv(os.path.join(self.reels_path, f))
 
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
+
+        # Three-tier free-spins bonus. count->tier: 3->1, 4->2, 5->3 (spins 8/12/15). Natural triggers
+        # clamp to tier 2 (naturalMaxTier); tier 3 (HIDDEN) is only reachable via a Mystery buy. Retrigger
+        # adds the landed tier's spins, capped at bonus_max total. gameConfig.ts:144-154,525,512.
+        self.natural_max_tier = 2
+        self.bonus_max = 30
+        # Per-tier feature reel: tier 3 always FR3; bought tiers 1/2 FRB; natural tiers 1/2 FR0.
+        self.tier3_reel = "FR3"
+        self.buy_reel = "FRB"
+        self.natural_reel = "FR0"
 
         # Multiplier-wild bags (>=1). BASE = tame; FEATURE = fat. Summed within a winning line by the
         # "symbol" multiplier strategy (only >=2 contribute; factor = max(sum, 1)). gameConfig.ts:174-194.
@@ -138,6 +153,17 @@ class GameConfig(Config):
             "force_wincap": False,
             "force_freegame": False,
         }
+        # A buy forces the feature every round; the forced scatter count locks the tier. (The freegame
+        # feature reel is repointed to the tier's pool at runtime in get_current_distribution_conditions,
+        # so the reel_weights[freegame] here is just a placeholder default.) {3,4,5} evenly exercises all
+        # three tiers (and the FRB / FR3 pools) in one mode for Milestone C.
+        buy_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FRB": 1}},
+            "scatter_triggers": {3: 1, 4: 1, 5: 1},
+            "mult_values": mult_values,
+            "force_wincap": False,
+            "force_freegame": True,
+        }
 
         mode_maxwins = {"base": self.wincap, "bonus": self.wincap}
         # NOTE (Milestone A): the `wincap` forced-max-win distribution is intentionally omitted until
@@ -167,7 +193,7 @@ class GameConfig(Config):
                 is_feature=False,
                 is_buybonus=True,
                 distributions=[
-                    Distribution(criteria="freegame", quota=1.0, conditions=freegame_condition),
+                    Distribution(criteria="freegame", quota=1.0, conditions=buy_condition),
                 ],
             ),
         ]

@@ -16,9 +16,12 @@ A (done): grid, 15 paylines, paytable (displayed-x units), symbols, base(BR0)+fe
    wincap, base LINES eval + stock free-spins loop, base+feature multiplier-wild bags. Units verified:
    10,472 unmultiplied line wins all == paytable*100; multiplier factor = summed >=2 wilds within a line.
    Forced-wincap distribution deferred to F (no round can reach 10,000x yet).
-B (todo): confirm base-line RTP split vs `npm run sim:rtp`; tune base multiplier bag if needed.
-C (todo): 3 tiers + naturalMaxTier=2 clamp + retrigger capped at bonusMax=30; tier-3 (wild22) & buy
-   (wild14) feature pools; feature wincap-room + early end.
+B (folded into A): multiplier wilds already live in base+feature; units + factor verified.
+C (done): 3 tiers (3/4/5 -> t1/t2/t3, 8/12/15 spins) + naturalMaxTier=2 clamp (natural never awards
+   HIDDEN) + retrigger capped at bonus_max=30; per-tier feature reel (natural FR0 / bought FRB / tier3
+   FR3) via get_current_distribution_conditions repoint. Verified: base yields only t1/t2; bonus yields
+   t1/t2/t3; tot_fs never exceeds 30; tier-3 boards draw wild-22 density vs wild-14 for t1/t2.
+   TODO (F): feature wincap-room early-end (clamp each feature board to remaining cap and stop).
 D (todo): raid wheel custom events (wheelSpin/wheelConvert/wheelSteal); ATTACK + STEAL; as its own
    base-game criteria with a force flag so the optimizer can pin the ~22.9% wheel contribution.
 E (todo): all 7 bet modes (base; base_bonuschance/base_wheelchance/base_bonuschance_wheelchance antes;

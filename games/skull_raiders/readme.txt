@@ -31,7 +31,10 @@ D (done): raid wheel as a base-game criteria (force_wheel). A wheel round replac
    multipliers, don't pad counts). Custom events wheelSpin/wheelConvert/wheelSteal + standard win events.
    Verified: 237/237 attack winInfo==finalWin; 263/263 steal recompute match + events consistent; no fs
    leak; wheel win mean ~43x, max ~905x. Optimizer pins the ~22.9% wheel contribution via the criteria.
-E (todo): all 7 bet modes (base; base_bonuschance/base_wheelchance/base_bonuschance_wheelchance antes;
-   bonus_1/bonus_2/bonus_mystery buys) with costs 1/3/5/8/100/150/300.
+E (done): all 7 bet modes — base (1x); antes base_bonuschance (3x, bonus-heavy), base_wheelchance (5x,
+   wheel-heavy), base_bonuschance_wheelchance (8x, both) reusing the base spin math; buys bonus_1 (100x,
+   tier1), bonus_2 (150x, tier2), bonus_mystery (300x, tier roll {3:1,4:1,5:2} -> only route to HIDDEN).
+   index.json mode names + costs match the client's publishedModeName taxonomy exactly. Raw buy EVs
+   ~95x/138x/266x (in optimizer reach of 96%). Per-criteria quotas are material-sizing only; F sets weights.
 F (todo): game_optimization opt_params per mode summing to 0.96; WCAP tail reel; full `make run`
    100k/mode; every mode 96% + 3-star volatility band; PAR sheet; lock MODE_RTP in the game repo.

@@ -11,8 +11,13 @@ if __name__ == "__main__":
     compression = False
     profiling = False
     num_sim_args = {
-        "base": 10000,
-        "bonus": 2000,
+        "base": 8000,
+        "base_bonuschance": 4000,
+        "base_wheelchance": 4000,
+        "base_bonuschance_wheelchance": 3000,
+        "bonus_1": 2000,
+        "bonus_2": 2000,
+        "bonus_mystery": 2000,
     }
     config = GameConfig()
     gamestate = GameState(config)

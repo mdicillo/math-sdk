@@ -169,17 +169,6 @@ class GameConfig(Config):
             "force_wincap": False,
             "force_freegame": False,
         }
-        # A buy forces the feature every round; the forced scatter count locks the tier. (The freegame
-        # feature reel is repointed to the tier's pool at runtime in get_current_distribution_conditions,
-        # so the reel_weights[freegame] here is just a placeholder default.) {3,4,5} evenly exercises all
-        # three tiers (and the FRB / FR3 pools) in one mode for Milestone C.
-        buy_condition = {
-            "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FRB": 1}},
-            "scatter_triggers": {3: 1, 4: 1, 5: 1},
-            "mult_values": mult_values,
-            "force_wincap": False,
-            "force_freegame": True,
-        }
         # A wheel round: the land draws from BR0, then the wheel builds the win. `force_wheel` is read in
         # run_spin (a custom flag; the framework only knows force_wincap/force_freegame).
         wheel_condition = {
@@ -190,36 +179,55 @@ class GameConfig(Config):
             "force_wheel": True,
         }
 
-        mode_maxwins = {"base": self.wincap, "bonus": self.wincap}
-        # NOTE (Milestone A): the `wincap` forced-max-win distribution is intentionally omitted until
-        # Milestone F, when a WCAP feature reel + a feature that can actually reach 10,000x exist. Forcing
-        # it now would make `check_repeat` resample forever (no round can hit the cap yet).
+        def buy_cond(scatter_triggers):
+            """A buy forces the feature every round; `scatter_triggers` locks (or rolls) the tier. The
+            freegame reel is repointed to the tier's pool at runtime (get_current_distribution_conditions)."""
+            return {
+                "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FRB": 1}},
+                "scatter_triggers": dict(scatter_triggers),
+                "mult_values": mult_values,
+                "force_wincap": False,
+                "force_freegame": True,
+            }
+
+        # bonus_1 -> tier 1 (3 scatters); bonus_2 -> tier 2 (4); bonus_mystery -> weighted tier roll
+        # {1:1,2:1,3:2} == scatter counts {3:1,4:1,5:2} (the only route to HIDDEN). gameConfig.ts:410-421.
+        buy1_condition = buy_cond({3: 1})
+        buy2_condition = buy_cond({4: 1})
+        mystery_condition = buy_cond({3: 1, 4: 1, 5: 2})
+
+        # NOTE (through Milestone E): the `wincap` forced-max-win distribution is intentionally omitted
+        # until Milestone F, when a WCAP feature reel + a feature that can actually reach 10,000x exist.
+        # Forcing it now makes `check_repeat` resample forever (no round can hit the cap yet).
+        #
+        # The seven published bet modes (all target 96%; buy PRICES are the premium for immediacy and are
+        # DECOUPLED from RTP — the optimizer weights each mode's outcomes to 96% at its own cost).
+        # Antes reuse the base spin math (same BR0/FR0 reels, same wheel): base_bonuschance boosts the
+        # bonus frequency, base_wheelchance boosts the wheel frequency, the combined mode boosts both. The
+        # per-criteria quotas below just size the book material; the optimizer sets the final weights (F).
+        def base_like(freegame_q, wheel_q, zero_q, basegame_q):
+            return [
+                Distribution(criteria="freegame", quota=freegame_q, conditions=freegame_condition),
+                Distribution(criteria="wheel", quota=wheel_q, conditions=wheel_condition),
+                Distribution(criteria="0", quota=zero_q, win_criteria=0.0, conditions=zerowin_condition),
+                Distribution(criteria="basegame", quota=basegame_q, conditions=basegame_condition),
+            ]
+
+        def base_mode(name, cost, dists):
+            return BetMode(name=name, cost=cost, rtp=self.rtp, max_win=self.wincap,
+                           auto_close_disabled=False, is_feature=True, is_buybonus=False, distributions=dists)
+
+        def buy_mode(name, cost, condition):
+            return BetMode(name=name, cost=cost, rtp=self.rtp, max_win=self.wincap,
+                           auto_close_disabled=False, is_feature=False, is_buybonus=True,
+                           distributions=[Distribution(criteria="freegame", quota=1.0, conditions=condition)])
+
         self.bet_modes = [
-            BetMode(
-                name="base",
-                cost=1.0,
-                rtp=self.rtp,
-                max_win=mode_maxwins["base"],
-                auto_close_disabled=False,
-                is_feature=True,
-                is_buybonus=False,
-                distributions=[
-                    Distribution(criteria="freegame", quota=0.1, conditions=freegame_condition),
-                    Distribution(criteria="wheel", quota=0.05, conditions=wheel_condition),
-                    Distribution(criteria="0", quota=0.35, win_criteria=0.0, conditions=zerowin_condition),
-                    Distribution(criteria="basegame", quota=0.5, conditions=basegame_condition),
-                ],
-            ),
-            BetMode(
-                name="bonus",
-                cost=100.0,
-                rtp=self.rtp,
-                max_win=mode_maxwins["bonus"],
-                auto_close_disabled=False,
-                is_feature=False,
-                is_buybonus=True,
-                distributions=[
-                    Distribution(criteria="freegame", quota=1.0, conditions=buy_condition),
-                ],
-            ),
+            base_mode("base", 1.0, base_like(0.10, 0.05, 0.35, 0.50)),
+            base_mode("base_bonuschance", 3.0, base_like(0.50, 0.05, 0.15, 0.30)),
+            base_mode("base_wheelchance", 5.0, base_like(0.08, 0.40, 0.22, 0.30)),
+            base_mode("base_bonuschance_wheelchance", 8.0, base_like(0.40, 0.30, 0.10, 0.20)),
+            buy_mode("bonus_1", 100.0, buy1_condition),
+            buy_mode("bonus_2", 150.0, buy2_condition),
+            buy_mode("bonus_mystery", 300.0, mystery_condition),
         ]

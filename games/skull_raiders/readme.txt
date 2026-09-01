@@ -22,8 +22,15 @@ C (done): 3 tiers (3/4/5 -> t1/t2/t3, 8/12/15 spins) + naturalMaxTier=2 clamp (n
    FR3) via get_current_distribution_conditions repoint. Verified: base yields only t1/t2; bonus yields
    t1/t2/t3; tot_fs never exceeds 30; tier-3 boards draw wild-22 density vs wild-14 for t1/t2.
    TODO (F): feature wincap-room early-end (clamp each feature board to remaining cap and stop).
-D (todo): raid wheel custom events (wheelSpin/wheelConvert/wheelSteal); ATTACK + STEAL; as its own
-   base-game criteria with a force flag so the optimizer can pin the ~22.9% wheel contribution.
+D (done): raid wheel as a base-game criteria (force_wheel). A wheel round replaces the line spin: draw a
+   land, strip scatters + natural wilds to lows, then ATTACK or STEAL (50/50) builds the whole win.
+   ATTACK redraws N paylines (weighted 1..5) with a payout symbol T + 1..3 wheel-mult wilds each, then
+   scores as ordinary line wins (cross-line completions included); land line-wins are broken first so
+   only the redraws pay. STEAL plants a present symbol (3..5 cells) + 1..3 banked wheel-mult wilds and
+   scores position-agnostically (evaluate_steal: sum every 3+ group x summed wild factor; wilds are pure
+   multipliers, don't pad counts). Custom events wheelSpin/wheelConvert/wheelSteal + standard win events.
+   Verified: 237/237 attack winInfo==finalWin; 263/263 steal recompute match + events consistent; no fs
+   leak; wheel win mean ~43x, max ~905x. Optimizer pins the ~22.9% wheel contribution via the criteria.
 E (todo): all 7 bet modes (base; base_bonuschance/base_wheelchance/base_bonuschance_wheelchance antes;
    bonus_1/bonus_2/bonus_mystery buys) with costs 1/3/5/8/100/150/300.
 F (todo): game_optimization opt_params per mode summing to 0.96; WCAP tail reel; full `make run`

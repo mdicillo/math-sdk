@@ -127,6 +127,22 @@ class GameConfig(Config):
 
         mult_values = {self.basegame_type: self.base_mult_bag, self.freegame_type: self.feature_mult_bag}
 
+        # --- Raid wheel (custom base-game event) -------------------------------------------------
+        # A wheel round replaces a normal base spin: a plain land board (no scatters, no natural win),
+        # then either ATTACK (redraw whole paylines) or STEAL (sweep every 3+ group). Weights mirror
+        # gameConfig.ts. Wheel wilds roll from a wheel-only multiplier bag (all >=2, so always contribute).
+        self.wheel_attack_share = 0.5  # P(attack); else steal
+        # ATTACK: number of paylines redrawn, and per-line the payout symbol + wild count.
+        self.attack_line_weights = {1: 60, 2: 28, 3: 9, 4: 2.5, 5: 0.5}
+        self.attack_symbol_weights = {"L5": 46, "L4": 30, "L3": 14, "L2": 6, "L1": 2.5, "H4": 1, "H3": 0.4}
+        self.attack_extras_weights = {1: 1, 2: 1, 3: 1}  # wilds per redrawn line, uniform [1,3]
+        self.attack_mult_bag = {4: 84, 6: 12, 10: 3, 25: 1}
+        # STEAL: present symbol + how many cells carry it, and how many multiplier wilds bank.
+        self.steal_present_weights = {"L5": 35, "L4": 26, "L3": 18, "L2": 10, "L1": 6, "H4": 3, "H3": 1.5, "H2": 0.4, "H1": 0.15}
+        self.steal_present_count_weights = {3: 1, 4: 1, 5: 1}  # present cells, uniform [3,5]
+        self.steal_wild_count_weights = {1: 94, 2: 5, 3: 1}
+        self.steal_mult_bag = {3: 70, 5: 18, 10: 7, 25: 3, 50: 1.5, 100: 0.5}
+
         freegame_condition = {
             "reel_weights": {self.basegame_type: {"BR0": 1}, self.freegame_type: {"FR0": 1}},
             "scatter_triggers": {3: 50, 4: 20, 5: 5},
@@ -164,6 +180,15 @@ class GameConfig(Config):
             "force_wincap": False,
             "force_freegame": True,
         }
+        # A wheel round: the land draws from BR0, then the wheel builds the win. `force_wheel` is read in
+        # run_spin (a custom flag; the framework only knows force_wincap/force_freegame).
+        wheel_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "mult_values": mult_values,
+            "force_wincap": False,
+            "force_freegame": False,
+            "force_wheel": True,
+        }
 
         mode_maxwins = {"base": self.wincap, "bonus": self.wincap}
         # NOTE (Milestone A): the `wincap` forced-max-win distribution is intentionally omitted until
@@ -180,7 +205,8 @@ class GameConfig(Config):
                 is_buybonus=False,
                 distributions=[
                     Distribution(criteria="freegame", quota=0.1, conditions=freegame_condition),
-                    Distribution(criteria="0", quota=0.4, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(criteria="wheel", quota=0.05, conditions=wheel_condition),
+                    Distribution(criteria="0", quota=0.35, win_criteria=0.0, conditions=zerowin_condition),
                     Distribution(criteria="basegame", quota=0.5, conditions=basegame_condition),
                 ],
             ),

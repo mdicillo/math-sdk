@@ -9,14 +9,21 @@ class GameState(GameStateOverride):
         self.repeat = True
         while self.repeat:
             self.reset_book()
-            self.draw_board()
 
-            # Evaluate wins, update wallet, transmit events
-            self.evaluate_lines_board()
+            if self.get_current_distribution_conditions().get("force_wheel"):
+                # A raid-wheel round replaces the normal line spin: the wheel builds the whole win, the
+                # land carries no scatter, so there is no free-spins trigger.
+                self.run_wheel_round()
+                self.win_manager.update_gametype_wins(self.gametype)
+            else:
+                self.draw_board()
 
-            self.win_manager.update_gametype_wins(self.gametype)
-            if self.check_fs_condition():
-                self.run_freespin_from_base()
+                # Evaluate wins, update wallet, transmit events
+                self.evaluate_lines_board()
+
+                self.win_manager.update_gametype_wins(self.gametype)
+                if self.check_fs_condition():
+                    self.run_freespin_from_base()
 
             self.evaluate_finalwin()
             self.check_repeat()

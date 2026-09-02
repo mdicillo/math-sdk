@@ -18,14 +18,19 @@ class GameCalculations(Executables):
         cols = config.num_reels
         min_match = min(k for (k, _s) in config.paytable.keys())
 
-        # Summed wild factor (only >=2 wilds contribute; floor at 1).
+        # Summed wild factor (only >=2 wilds contribute; floor at 1) + the wild cell positions (every
+        # wild coin, so the client's STEAL animation can find and light them — the WILD phase is driven
+        # off the event's `positions`, evaluate.ts / ReelSet.stealReveal).
         wild_factor = 0
+        wild_positions = []
         for reel in range(len(board)):
-            for cell in board[reel]:
+            for row in range(len(board[reel])):
+                cell = board[reel][row]
                 if cell.name == wild:
                     m = cell.get_attribute("multiplier") if cell.check_attribute("multiplier") else 1
                     if m > 1:
                         wild_factor += m
+                    wild_positions.append({"reel": reel, "row": row})
         wild_factor = max(wild_factor, 1)
 
         # Count and locate every non-wild symbol across the whole board.
@@ -57,4 +62,8 @@ class GameCalculations(Executables):
                         "meta": {"multiplier": int(wild_factor), "winWithoutMult": pay, "wheelSteal": True},
                     }
                 )
-        return {"totalWin": total, "wins": wins}
+        # The full set of stolen cells: every winning group's cells + every wild coin. The client's
+        # stealReveal derives BOTH the non-wild ladder AND the WILD x-multiplier phase from this list, so
+        # a wild missing here stays dimmed ("blacked out"). Mirrors fake-math evaluateSteal.positions.
+        all_positions = [p for w in wins for p in w["positions"]] + wild_positions
+        return {"totalWin": total, "wins": wins, "positions": all_positions}

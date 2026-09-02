@@ -156,7 +156,7 @@ class GameExecutables(GameCalculations):
         wheel_steal_event(
             self,
             self._steal_present_sym,
-            self._steal_present_cells,
+            wd["positions"],  # every stolen cell (all group members + wild coins), not just the present symbol
             wd["totalWin"],
             factor,
             [{"symbol": w["symbol"], "count": w["kind"], "win": int(round(w["win"] * 100, 0))} for w in wd["wins"]],

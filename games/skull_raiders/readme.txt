@@ -48,3 +48,17 @@ F (CERTIFIED): feature wincap early-end + WILD-rich WCAP reel + forced-max-win d
 
    The local `make run` prints un-normalized 3-star warnings for the high-cost modes; those are EXPECTED
    (the platform gates on the cost-normalized values above), not a regression. See STAKE_PORT.md.
+
+Port lessons (read before the next port)
+----------------------------------------
+This port shipped three bugs to Stake that a local check would have caught in seconds (a prod-only boot
+TDZ, and two STEAL event-parity bugs), plus a long optimizer-convergence dead-end. The authoritative
+write-up is docs/STAKE_PORT.md in the GAME repo (castle-raid), section "Lessons from the first port". In
+short, on every port:
+  - Read the SDK docs FIRST — optimization_section/optimization_algorithm.md + gamestate_section/
+    force_info.md. Criteria only converge to their RTP target if bucketed by `search_conditions`
+    (wincap first by win value; freegame {"symbol":"scatter"}; a custom event by a record() tag;
+    basegame = the searchless remainder LAST). This is where the convergence dead-end was.
+  - Gate every cert + upload on `npm run parity` in the game repo (fake-math vs SDK-through-adapter must
+    be identical), and smoke-test the real paths (prod bundle + book-player), not just RTP/hashes.
+  - The 100k cert is the expensive step; never run it to DISCOVER a bug — parity + debug sims do that.

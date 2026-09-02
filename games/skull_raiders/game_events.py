@@ -28,9 +28,9 @@ def wheel_convert_event(gamestate, cells: list) -> None:
     """ATTACK: the cells the fireballs redrew. Each cell = {reel, row, name, multiplier?}."""
     out = []
     for c in cells:
-        cell = {"reel": c["reel"], "row": _pad_row(gamestate, c["row"]), "name": c["name"]}
+        cell = {"reel": c["reel"], "row": _pad_row(gamestate, c["row"]), "symbol": c["name"]}
         if c.get("multiplier", 1) > 1:
-            cell["multiplier"] = int(c["multiplier"])
+            cell["mult"] = int(c["multiplier"])
         out.append(cell)
     gamestate.book.add_event(
         {"index": len(gamestate.book.events), "type": WHEEL_CONVERT, "cells": out}

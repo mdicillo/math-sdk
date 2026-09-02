@@ -3,7 +3,7 @@ import random
 from game_calculations import GameCalculations
 from src.calculations.lines import Lines
 from src.calculations.statistics import get_random_outcome
-from src.events.events import reveal_event, win_info_event, set_win_event, set_total_event
+from src.events.events import reveal_event, set_total_event
 from game_events import wheel_spin_event, wheel_convert_event, wheel_steal_event
 
 LOWS = ["L1", "L2", "L3", "L4", "L5"]
@@ -141,7 +141,14 @@ class GameExecutables(GameCalculations):
         self._steal_present_cells = [{"reel": r, "row": row} for (r, row) in present_cells]
 
     def _score_steal(self):
-        """Score the composed steal board (position-agnostic) and emit the wheel + standard win events."""
+        """Score the composed steal board (position-agnostic) and emit the wheel + total-win events.
+
+        A STEAL pays via the wheelSteal event (every 3+ group x the summed wild factor), NOT via lines —
+        so it emits reveal / wheelSpin / wheelSteal / setTotalWin / finalWin and NO winInfo. Emitting a
+        winInfo here (as an earlier version did) makes the client run the ordinary line-win presentation
+        over the steal, which lights only the group cells and leaves the multiplier WILDs blacked out.
+        Mirrors the fake-math STEAL event stream exactly (provider.ts generateWheelRound).
+        """
         wd = self.evaluate_steal(self.board, self.config)
         self.win_data = wd
         self.win_manager.update_spinwin(wd["totalWin"])
@@ -152,10 +159,8 @@ class GameExecutables(GameCalculations):
             self._steal_present_cells,
             wd["totalWin"],
             factor,
-            [{"symbol": w["symbol"], "kind": w["kind"], "win": int(round(w["win"] * 100, 0))} for w in wd["wins"]],
+            [{"symbol": w["symbol"], "count": w["kind"], "win": int(round(w["win"] * 100, 0))} for w in wd["wins"]],
         )
         if wd["totalWin"] > 0:
-            win_info_event(self)
             self.evaluate_wincap()
-            set_win_event(self)
-        set_total_event(self)
+            set_total_event(self)

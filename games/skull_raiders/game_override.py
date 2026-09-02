@@ -33,6 +33,12 @@ class GameStateOverride(GameExecutables):
         multiplier_value = get_random_outcome(bag) if bag else 1
         symbol.assign_attribute({"multiplier": multiplier_value})
 
+    def update_freespin(self):
+        """Annotate each free-spin's updateFreeSpin with the running round win, so the client's
+        book-player shows the same live feature total the fake-math path does (byte-identical replay)."""
+        super().update_freespin()
+        self.book.events[-1]["totalWin"] = round(self.win_manager.running_bet_win * 100)
+
     def update_freespin_amount(self, scatter_key: str = "scatter"):
         """Set the feature TIER, initial spins and per-tier reel at the trigger.
 
@@ -82,7 +88,10 @@ class GameStateOverride(GameExecutables):
             return
         self.tot_fs += add
         fs_trigger_event(self, freegame_trigger=True, basegame_trigger=False)
-        self.book.events[-1]["capped"] = self.tot_fs >= self.config.bonus_max
+        ev = self.book.events[-1]
+        ev["level"] = int(self.fs_tier)
+        ev["added"] = int(add)
+        ev["capped"] = self.tot_fs >= self.config.bonus_max
 
     def get_current_distribution_conditions(self) -> dict:
         """Point the free-spin board draws at this feature's tier reel (fs_feature_reel).

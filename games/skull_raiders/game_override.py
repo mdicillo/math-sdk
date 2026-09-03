@@ -34,10 +34,13 @@ class GameStateOverride(GameExecutables):
         symbol.assign_attribute({"multiplier": multiplier_value})
 
     def update_freespin(self):
-        """Annotate each free-spin's updateFreeSpin with the running round win, so the client's
-        book-player shows the same live feature total the fake-math path does (byte-identical replay)."""
+        """Annotate each free-spin's updateFreeSpin with the running FEATURE win (feature-only), matching
+        the fake-math path and the freeSpinEnd outro. Must be `freegame_wins`, NOT `running_bet_win`:
+        running_bet_win is round-scoped (base + feature) and leaks the triggering base-spin line win into
+        the free-spins counter, so it would open on the base win instead of 0. See the game repo's
+        docs/PICKUP-freespins-win-total.md and scripts/parity-audit.ts (first-free-spin totalWin == 0)."""
         super().update_freespin()
-        self.book.events[-1]["totalWin"] = round(self.win_manager.running_bet_win * 100)
+        self.book.events[-1]["totalWin"] = round(self.win_manager.freegame_wins * 100)
 
     def update_freespin_amount(self, scatter_key: str = "scatter"):
         """Set the feature TIER, initial spins and per-tier reel at the trigger.

@@ -110,6 +110,24 @@ FREE_STRIKE = {
 # A bought round's trigger spin: the frame never settles on a WILD, so nothing beams and nothing strikes.
 BOUGHT_TRIGGER_STRIKE = {**BASE_STRIKE, "frame_on_wild": 0}
 
+# Max-win books (the "wincap" criteria; user decision 2026-09-12). The optimizer's max-win bucket needs books that pay
+# MAX_WIN, and ordinary features cap far too rarely to find them by replaying. These books force the trigger and play
+# their feature on FRWCAP, a WILD-heavy free-spin strip (SDK only; exported by the rebuild's `npm run parity -- export`),
+# with WINCAP_STRIKE: the frame always catches a WILD, every beam strikes, strikes are big with 7x/10x wilds, and the
+# aim leans toward the bigger pays. Every event still follows the game's rules; the optimizer sets how often they come.
+WINCAP_FREE_REELS = "FRWCAP"
+WINCAP_STRIKE = {
+    "frame_on_wild": 1.0,
+    "chance_by_beams": [1.0, 1.0, 1.0],
+    "sizes": {(6, 9): 1, (10, 14): 1, (FULL_BOARD, FULL_BOARD): 1},
+    "multipliers": {7: 1, 10: 2},
+    "floor": 5,
+    "ceiling": MAX_WIN,
+    "aim_tries": 40,
+    "aim_lean": -1,
+    "resizes": 6,
+}
+
 # Base-game WILD STRIKE tuning for each mode that spins the base game.
 MODE_BASE_STRIKE = {
     "base": BASE_STRIKE,
@@ -147,9 +165,11 @@ BUY_FEATURES = {
     "wheel_bonus": {"free_spins": WHEEL_FREE_SPINS, "feature_mult": None, "wheel": True},
 }
 
-# Debug share of books that play free spins. How often a feature comes in the published game is the optimizer's to
-# set (from the criteria's hit rate); the SDK forces the trigger on "freegame" books and re-draws it everywhere else.
-FREEGAME_QUOTA = 0.1
+# Shares of the simulated books by criteria. How often each comes in the published game is the optimizer's to set
+# (game_optimization.py); these only decide how many books of each kind it has to weight.
+WINCAP_QUOTA = 0.001  # books paying MAX_WIN
+FREEGAME_QUOTA = 0.1  # books whose base spin triggers free spins
+WILDSTRIKE_QUOTA = 0.1  # base-game books with a WILD STRIKE and no trigger (base-strip modes)
 
 
 class GameConfig(Config):
@@ -232,6 +252,7 @@ class GameConfig(Config):
             "BR_AW": "BR_AW.csv",
             "BR_WBAW": "BR_WBAW.csv",
             "FR0": "FR0.csv",
+            "FRWCAP": "FRWCAP.csv",
         }
         self.reels = {}
         for r, f in reels.items():
@@ -240,27 +261,30 @@ class GameConfig(Config):
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
 
-        # Distribution conditions: the base-game strip and strike tuning, and the feature a trigger plays — its spins,
-        # naturally landed WILDs' multiplier (None: the wheel's), the wheel, and its floor. Zero-win, wincap and strike
-        # criteria come with the optimizer.
-        def conditions(base_reels, base_strike, feature, floor, force_freegame):
+        # Distribution conditions: the base-game strip and strike tuning, and the feature a trigger plays — its strip and
+        # strike tuning, spins, naturally landed WILDs' multiplier (None: the wheel's), the wheel, and its floor.
+        # force_wildstrike: the book is played again until its base spin strikes (game_override check_repeat).
+        def conditions(base_reels, base_strike, feature, floor, free_reels="FR0", free_strike=FREE_STRIKE,
+                       force_freegame=False, force_wincap=False, force_wildstrike=False):
             return {
                 "reel_weights": {
                     self.basegame_type: {base_reels: 1},
-                    self.freegame_type: {"FR0": 1},
+                    self.freegame_type: {free_reels: 1},
                 },
                 "scatter_triggers": {3: 1},
                 "wild_strike": base_strike,
-                "free_strike": FREE_STRIKE,
+                "free_strike": free_strike,
                 "free_spins": feature["free_spins"],
                 "feature_mult": feature["feature_mult"],
                 "wheel": feature["wheel"],
                 "feature_floor": floor,
-                "force_wincap": False,
+                "force_wildstrike": force_wildstrike,
+                "force_wincap": force_wincap,
                 "force_freegame": force_freegame,
             }
 
-        # Base-strip modes: "freegame" books force the trigger, "basegame" books re-draw it.
+        # Base-strip modes: max-win books, free-spin books (the trigger forced), WILD STRIKE books (a base strike, no
+        # trigger) and the rest (no trigger: re-drawn).
         def base_modes(name):
             wheel = MODE_WHEEL[name]
             feature = {
@@ -270,20 +294,35 @@ class GameConfig(Config):
             }
             args = (MODE_BASE_REELS[name], MODE_BASE_STRIKE[name], feature, NATURAL_FEATURE_FLOOR)
             return [
-                Distribution(criteria="freegame", quota=FREEGAME_QUOTA, conditions=conditions(*args, True)),
-                Distribution(criteria="basegame", quota=1 - FREEGAME_QUOTA, conditions=conditions(*args, False)),
+                Distribution(
+                    criteria="wincap",
+                    quota=WINCAP_QUOTA,
+                    win_criteria=MAX_WIN,
+                    conditions=conditions(*args, free_reels=WINCAP_FREE_REELS, free_strike=WINCAP_STRIKE,
+                                          force_freegame=True, force_wincap=True),
+                ),
+                Distribution(criteria="freegame", quota=FREEGAME_QUOTA, conditions=conditions(*args, force_freegame=True)),
+                Distribution(criteria="wildstrike", quota=WILDSTRIKE_QUOTA, conditions=conditions(*args, force_wildstrike=True)),
+                Distribution(
+                    criteria="basegame",
+                    quota=1 - WINCAP_QUOTA - FREEGAME_QUOTA - WILDSTRIKE_QUOTA,
+                    conditions=conditions(*args),
+                ),
             ]
 
         # Buys: every book plants the trigger on the base strips, its trigger spin never beams, and its feature's floor
-        # is BUY_FLOOR_SHARE of the price. The optimizer weights the bought books to the mode's RTP.
+        # is BUY_FLOOR_SHARE of the price. Max-win books, then the rest.
         def buy_modes(name):
-            floor = MODE_COSTS[name] * BUY_FLOOR_SHARE
+            args = ("BR0", BOUGHT_TRIGGER_STRIKE, BUY_FEATURES[name], MODE_COSTS[name] * BUY_FLOOR_SHARE)
             return [
                 Distribution(
-                    criteria="freegame",
-                    quota=1.0,
-                    conditions=conditions("BR0", BOUGHT_TRIGGER_STRIKE, BUY_FEATURES[name], floor, True),
+                    criteria="wincap",
+                    quota=WINCAP_QUOTA,
+                    win_criteria=MAX_WIN,
+                    conditions=conditions(*args, free_reels=WINCAP_FREE_REELS, free_strike=WINCAP_STRIKE,
+                                          force_freegame=True, force_wincap=True),
                 ),
+                Distribution(criteria="freegame", quota=1 - WINCAP_QUOTA, conditions=conditions(*args, force_freegame=True)),
             ]
 
         self.bet_modes = []

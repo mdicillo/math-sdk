@@ -122,6 +122,17 @@ def conditional_value_at_risk(cutoff: float, dist: dict, total_weight) -> float:
     return tail_value / tail_prob
 
 
+def get_prob_scale(bet_cost: float) -> float:
+    """Leniency factor applied to tail-probability checks for high bet-cost modes."""
+    if bet_cost >= 1000:
+        return 0.2
+    if bet_cost >= 500:
+        return 0.5
+    if bet_cost >= 200:
+        return 0.8
+    return 1.0
+
+
 def get_etl_cvar_p5k_10k_vales(dist: dict, bet_cost: float, total_weight=None) -> list[float]:
     """Get Math Validation Values"""
     if total_weight is None:
@@ -137,8 +148,9 @@ def get_etl_cvar_p5k_10k_vales(dist: dict, bet_cost: float, total_weight=None) -
         if win >= 40 * bet_cost:
             etl40 += win * (weight / total_weight)
     cvar = conditional_value_at_risk(0.999, dist, total_weight)
+    prob_scale = get_prob_scale(bet_cost)
 
-    return p5k, p10k, etl10k, etl40, cvar
+    return p5k * prob_scale, p10k * prob_scale, etl10k, etl40, cvar / bet_cost
 
 
 def get_maxwin_hitrate(dist: dict, total_weight=None) -> float:

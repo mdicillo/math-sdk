@@ -14,6 +14,10 @@ WHEEL on, the wheel spins first and its multiplier (3x/4x/5x/7x/10x) replaces th
 frame and WILD STRIKE (free-spin chances), the feature's first strike is guaranteed, 3 BONUS symbols add 5 spins
 up to 30, and a feature always pays at least 15x (its wins only, the triggering spin's win left out).
 
+Buys: the base spin always lands the trigger (3 BONUS symbols on the base strips) and never beams, then the
+feature plays by the same rules. BONUS: 10 spins, WILDs 2x. SUPER BONUS: 20 spins, WILDs 3x. WHEEL BONUS: the
+wheel, then 10 spins at its multiplier. A bought feature pays at least 15% of its price (15x / 45x / 22.5x).
+
 Source of truth: the thunderborne-rebuild fake math (src/config/gameConfig.ts, src/rgs/fakeMath/).
 Reel strips in reels/ are exported from it exactly. Symbol ids match the client: T = "10", N = "9".
 Parity: in thunderborne-rebuild, `npm run parity` checks this game's debug books against the fake math.
@@ -23,29 +27,38 @@ Bet modes:
   base_wild_boost                  3x   WILD BOOST ante (more WILDs, stronger WILD STRIKE)
   base_activate_wheel              3x   ACTIVATE WHEEL ante (more triggers, every natural trigger plays the wheel)
   base_wild_boost_activate_wheel   6x   both antes
-  bonus                            100x BONUS buy: 10 free spins, WILDs 2x
-  super_bonus                      300x SUPER BONUS buy: 20 free spins, WILDs 3x
-  wheel_bonus                      150x WHEEL BONUS buy: the wheel, then 10 free spins at its multiplier
+  bonus                            100x BONUS buy
+  super_bonus                      300x SUPER BONUS buy
+  wheel_bonus                      150x WHEEL BONUS buy
 All modes target 96% RTP.
 
 Reels:
-  BR0      base game               (gameConfig.ts BASE_STRIP)
+  BR0      base game, and every buy's trigger spin (gameConfig.ts BASE_STRIP)
   BR_WB    WILD BOOST base game    (ANTE_STRIPS.wild_boost)
   BR_AW    ACTIVATE WHEEL base game (ANTE_STRIPS.wheel_ante, 400 cells)
   BR_WBAW  both antes base game    (ANTE_STRIPS.both)
   FR0      every free-spin feature (FREE_STRIP)
 
-Criteria (base-strip modes, debug): "freegame" books force the trigger (FREEGAME_QUOTA of the books), "basegame"
-books re-draw any board showing 3 BONUS symbols. The optimizer sets how often each comes in the published game.
+Criteria (debug): base-strip modes split into "freegame" books, which force the trigger (FREEGAME_QUOTA of the
+books), and "basegame" books, which re-draw any board showing 3 BONUS symbols. Buys are all "freegame". The
+optimizer sets how often each comes, and weights the bought books to 96%.
+
+Deviations from the fake math:
+  - A buy's trigger board is drawn like a natural trigger (force_special_board: a BONUS symbol at a random row of
+    each reel's window on BR0); the fake math plants the three on the top row.
+  - The fake math's BUY_WEIGHTING (keep one of several plays by total^lean) is not ported: bought features are
+    simulated plainly and the optimizer re-weights them.
+  - A feature under its floor or without a strike is always replayed; the fake math gives up after 50 replays.
 
 Custom events (rows count the padding row, as winInfo's positions do):
   wildFrame   {cell: {reel, row}, beams: [{reel, row}]}   after every reveal
   wildStrike  {wilds: [{reel, row, mult}]}                 after wildFrame, before winInfo
-  wheelSpin   {multiplier}                                 right before freeSpinTrigger (ACTIVATE WHEEL modes)
+  wheelSpin   {multiplier}                                 right before freeSpinTrigger (the wheel feature)
 
 Port status:
   Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
   Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST).
   Step 3 - natural free spins: FREE_STRIKE, the guaranteed strike, retriggers to 30, the 15x floor, the wheel.
+  Step 4 - the buys: BONUS, SUPER BONUS, WHEEL BONUS (unweighted; config files written).
            Debug: PYTHONPATH=. python3 games/thunderborne/run_debug.py
-  Later  - buys, optimizer criteria, event alignment.
+  Later  - optimizer criteria (zero-win, wincap, strike buckets) and weights, event alignment.

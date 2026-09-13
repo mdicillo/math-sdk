@@ -1,7 +1,7 @@
 from game_executables import GameExecutables
 from game_config import FEATURE_WILD_MULT, MAX_FREE_SPINS, RETRIGGER_SPINS
 from game_events import wheel_spin_event
-from src.events.events import fs_trigger_event
+from src.events.events import fs_trigger_event, wincap_event
 
 
 class GameStateOverride(GameExecutables):
@@ -30,8 +30,8 @@ class GameStateOverride(GameExecutables):
         symbol.assign_attribute({"multiplier": mult})
 
     def run_freespin_from_base(self, scatter_key: str = "scatter") -> None:
-        """Trigger the feature: in ACTIVATE WHEEL modes the wheel spins first and sets every WILD's multiplier, otherwise
-        WILDs are FEATURE_WILD_MULT."""
+        """Trigger the feature: when the mode plays the wheel it spins first and sets every WILD's multiplier, otherwise
+        WILDs take the mode's feature_mult (2x, or 3x in SUPER BONUS)."""
         self.record(
             {
                 "kind": self.count_special_symbols(scatter_key),
@@ -39,13 +39,19 @@ class GameStateOverride(GameExecutables):
                 "gametype": self.gametype,
             }
         )
-        if self.get_current_distribution_conditions()["wheel"]:
+        conditions = self.get_current_distribution_conditions()
+        if conditions["wheel"]:
             self.feature_mult = self.wheel_mult
             wheel_spin_event(self)
         else:
-            self.feature_mult = FEATURE_WILD_MULT
+            self.feature_mult = conditions["feature_mult"]
         self.update_freespin_amount()
         self.run_freespin()
+
+    def update_freespin_amount(self, scatter_key: str = "scatter") -> None:
+        """A trigger's free spins: the mode's free_spins (20 in SUPER BONUS, otherwise 10)."""
+        self.tot_fs = self.get_current_distribution_conditions()["free_spins"]
+        fs_trigger_event(self, basegame_trigger=True, freegame_trigger=False)
 
     def update_fs_retrigger_amt(self, scatter_key: str = "scatter") -> None:
         """Retrigger: RETRIGGER_SPINS more free spins, never past MAX_FREE_SPINS."""
@@ -56,7 +62,17 @@ class GameStateOverride(GameExecutables):
         super().check_repeat()
         # Every feature has at least one WILD STRIKE and pays at least its floor; a round whose feature doesn't is played
         # again (the base spin is drawn independently of the feature, so only the feature's outcome is filtered).
+        # Wins are rounded to hundredths before comparing: the SDK sums line wins as floats.
         if self.repeat is False and self.triggered_freegame:
             floor = self.get_current_distribution_conditions()["feature_floor"]
-            if self.feature_strikes == 0 or self.win_manager.freegame_wins < floor:
+            if self.feature_strikes == 0 or round(self.win_manager.freegame_wins, 2) < floor:
                 self.repeat = True
+
+    def evaluate_wincap(self) -> None:
+        """Stop the round's spins once its win reaches the wincap (Executables.evaluate_wincap), with the running win
+        rounded to hundredths so a round summing to 4999.99999... still caps."""
+        if round(self.win_manager.running_bet_win, 2) >= self.config.wincap and not self.wincap_triggered:
+            self.wincap_triggered = True
+            wincap_event(self)
+            return True
+        return False

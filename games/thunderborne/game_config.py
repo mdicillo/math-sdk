@@ -107,6 +107,9 @@ FREE_STRIKE = {
     "resizes": 6,
 }
 
+# A bought round's trigger spin: the frame never settles on a WILD, so nothing beams and nothing strikes.
+BOUGHT_TRIGGER_STRIKE = {**BASE_STRIKE, "frame_on_wild": 0}
+
 # Base-game WILD STRIKE tuning for each mode that spins the base game.
 MODE_BASE_STRIKE = {
     "base": BASE_STRIKE,
@@ -116,11 +119,15 @@ MODE_BASE_STRIKE = {
 }
 
 # Free spins (provider.ts), the same rules for every feature.
-FREE_SPINS = 10  # a trigger's spins (the wheel feature plays 10 too)
+FREE_SPINS = 10  # a natural trigger's spins (and BONUS)
+WHEEL_FREE_SPINS = 10  # the wheel feature's spins (ACTIVATE WHEEL triggers and WHEEL BONUS)
+SUPER_FREE_SPINS = 20  # SUPER BONUS
 RETRIGGER_SPINS = 5  # 3 BONUS symbols during the feature add this many
 MAX_FREE_SPINS = 30  # retriggers stop adding at this many
-FEATURE_WILD_MULT = 2  # naturally landed WILDs in a natural feature
+FEATURE_WILD_MULT = 2  # naturally landed WILDs in a natural feature (and BONUS)
+SUPER_WILD_MULT = 3  # naturally landed WILDs in SUPER BONUS
 NATURAL_FEATURE_FLOOR = 15  # a natural feature pays at least this (× base bet), with at least one WILD STRIKE
+BUY_FLOOR_SHARE = 0.15  # a bought feature pays at least this share of its price instead
 
 # The wheel's WILD multiplier for the feature: {multiplier: weight}.
 WHEEL_WEIGHTS = {3: 35, 4: 25, 5: 18, 7: 12, 10: 10}
@@ -131,6 +138,13 @@ MODE_WHEEL = {
     "base_wild_boost": False,
     "base_activate_wheel": True,
     "base_wild_boost_activate_wheel": True,
+}
+
+# Each buy's feature: its spins, its naturally landed WILDs' multiplier (None: the wheel's), and whether the wheel spins.
+BUY_FEATURES = {
+    "bonus": {"free_spins": FREE_SPINS, "feature_mult": FEATURE_WILD_MULT, "wheel": False},
+    "super_bonus": {"free_spins": SUPER_FREE_SPINS, "feature_mult": SUPER_WILD_MULT, "wheel": False},
+    "wheel_bonus": {"free_spins": WHEEL_FREE_SPINS, "feature_mult": None, "wheel": True},
 }
 
 # Debug share of books that play free spins. How often a feature comes in the published game is the optimizer's to
@@ -226,44 +240,49 @@ class GameConfig(Config):
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
 
-        # Steps 1–3 (grid, pays, strips, modes, WILD STRIKE, natural free spins): every base-strip mode splits into
-        # "freegame" books (the trigger forced) and "basegame" books (no trigger), with its own strip, strike tuning and
-        # wheel. Zero-win, wincap and strike criteria come with the optimizer.
-        def base_modes(name):
-            def conditions(force_freegame):
-                return {
-                    "reel_weights": {
-                        self.basegame_type: {MODE_BASE_REELS[name]: 1},
-                        self.freegame_type: {"FR0": 1},
-                    },
-                    "scatter_triggers": {3: 1},
-                    "wild_strike": MODE_BASE_STRIKE[name],
-                    "free_strike": FREE_STRIKE,
-                    "wheel": MODE_WHEEL[name],
-                    "feature_floor": NATURAL_FEATURE_FLOOR,
-                    "force_wincap": False,
-                    "force_freegame": force_freegame,
-                }
+        # Distribution conditions: the base-game strip and strike tuning, and the feature a trigger plays — its spins,
+        # naturally landed WILDs' multiplier (None: the wheel's), the wheel, and its floor. Zero-win, wincap and strike
+        # criteria come with the optimizer.
+        def conditions(base_reels, base_strike, feature, floor, force_freegame):
+            return {
+                "reel_weights": {
+                    self.basegame_type: {base_reels: 1},
+                    self.freegame_type: {"FR0": 1},
+                },
+                "scatter_triggers": {3: 1},
+                "wild_strike": base_strike,
+                "free_strike": FREE_STRIKE,
+                "free_spins": feature["free_spins"],
+                "feature_mult": feature["feature_mult"],
+                "wheel": feature["wheel"],
+                "feature_floor": floor,
+                "force_wincap": False,
+                "force_freegame": force_freegame,
+            }
 
+        # Base-strip modes: "freegame" books force the trigger, "basegame" books re-draw it.
+        def base_modes(name):
+            wheel = MODE_WHEEL[name]
+            feature = {
+                "free_spins": WHEEL_FREE_SPINS if wheel else FREE_SPINS,
+                "feature_mult": None if wheel else FEATURE_WILD_MULT,
+                "wheel": wheel,
+            }
+            args = (MODE_BASE_REELS[name], MODE_BASE_STRIKE[name], feature, NATURAL_FEATURE_FLOOR)
             return [
-                Distribution(criteria="freegame", quota=FREEGAME_QUOTA, conditions=conditions(True)),
-                Distribution(criteria="basegame", quota=1 - FREEGAME_QUOTA, conditions=conditions(False)),
+                Distribution(criteria="freegame", quota=FREEGAME_QUOTA, conditions=conditions(*args, True)),
+                Distribution(criteria="basegame", quota=1 - FREEGAME_QUOTA, conditions=conditions(*args, False)),
             ]
 
-        # Buys plant the trigger (force_freegame). Not simulated until the buys are ported.
-        def buy_modes_placeholder():
+        # Buys: every book plants the trigger on the base strips, its trigger spin never beams, and its feature's floor
+        # is BUY_FLOOR_SHARE of the price. The optimizer weights the bought books to the mode's RTP.
+        def buy_modes(name):
+            floor = MODE_COSTS[name] * BUY_FLOOR_SHARE
             return [
                 Distribution(
                     criteria="freegame",
                     quota=1.0,
-                    conditions={
-                        "reel_weights": {
-                            self.basegame_type: {"BR0": 1},
-                            self.freegame_type: {"FR0": 1},
-                        },
-                        "force_wincap": False,
-                        "force_freegame": True,
-                    },
+                    conditions=conditions("BR0", BOUGHT_TRIGGER_STRIKE, BUY_FEATURES[name], floor, True),
                 ),
             ]
 
@@ -281,7 +300,7 @@ class GameConfig(Config):
                     distributions=base_modes(name),
                 )
             )
-        for name in ["bonus", "super_bonus", "wheel_bonus"]:
+        for name in BUY_FEATURES:
             self.bet_modes.append(
                 BetMode(
                     name=name,
@@ -291,12 +310,15 @@ class GameConfig(Config):
                     auto_close_disabled=False,
                     is_feature=False,
                     is_buybonus=True,
-                    distributions=buy_modes_placeholder(),
+                    distributions=buy_modes(name),
                 )
             )
 
     def get_win_level(self, win_amount: float, winlevel_key: str) -> int:
-        """Win (× base bet) → level 1..11 on the WIN_LEVEL_BANDS ladder (the client's winLevel)."""
+        """Win (× base bet) → level 1..11 on the WIN_LEVEL_BANDS ladder (the client's winLevel). The win is rounded to
+        hundredths first: the SDK sums line wins as floats (a 50x spin can add up to 49.99999999999999), while the
+        events carry the rounded amount."""
+        win_amount = round(win_amount, 2)
         bands = WIN_LEVEL_BANDS[winlevel_key]
         for idx, edge in enumerate(bands):
             if win_amount < edge:

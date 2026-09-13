@@ -35,11 +35,12 @@ class GameCalculations(Executables):
         return wild
 
     def strike_pay(self, wilds: list) -> float:
-        """What the board pays (× base bet) once `wilds` are struck onto it."""
+        """What the board pays (× base bet) once `wilds` are struck onto it, rounded to hundredths so a pay exactly at the
+        floor or ceiling compares as it does in the books (the SDK sums line wins as floats)."""
         board = [column[:] for column in self.board]
         for wild in wilds:
             board[wild["reel"]][wild["row"]] = self.strike_wild(wild["mult"])
-        return Lines.get_lines(board, self.config)["totalWin"]
+        return round(Lines.get_lines(board, self.config)["totalWin"], 2)
 
     def aim_strike(self, open_cells: list, mults: list, tuning: dict):
         """Place wilds carrying `mults` on `open_cells` so the spin pays between the tuning's floor and ceiling: random

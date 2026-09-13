@@ -1,5 +1,5 @@
-"""Full pipeline for thunderborne: simulate every bet mode, optimize the lookup tables, write the PAR sheet and run the
-RGS format checks.
+"""Full pipeline for thunderborne: simulate every bet mode, optimize the lookup tables, publish each base-strip mode's
+candidate closest to its natural line-win spread (game_selection.py), write the PAR sheet and run the RGS format checks.
 
 Debug scale: 10,000 books a mode. Certification is 100,000 a mode, only once the user approves that run.
 Books are compressed here (publish_files/books_<mode>.jsonl.zst); run_debug.py writes readable ones.
@@ -7,7 +7,8 @@ Books are compressed here (publish_files/books_<mode>.jsonl.zst); run_debug.py w
 
 from gamestate import GameState
 from game_config import GameConfig
-from game_optimization import OptimizationSetup
+from game_optimization import BASE_TARGETS, OptimizationSetup
+from game_selection import publish_closest_candidates
 from optimization_program.run_script import OptimizationExecution
 from utils.game_analytics.run_analysis import create_stat_sheet
 from utils.rgs_verification import execute_all_tests
@@ -60,6 +61,7 @@ if __name__ == "__main__":
 
     if run_conditions["run_optimization"]:
         OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
+        publish_closest_candidates(config, [mode for mode in target_modes if mode in BASE_TARGETS])
         generate_configs(gamestate)
 
     if run_conditions["run_analysis"]:

@@ -12,15 +12,23 @@ A buy has wincap, then freegame taking every remaining book.
 Targets (user decision, 2026-09-12): the fake math's measured split scaled so each mode sums to 96%, and its max-win
 rates. The line-win share is what's left, so the sum is exact. Re-measured for the v3 base layout (2026-09-13): 16M
 rounds a mode (two seeds of 8M), each round sorted as the buckets above; the line-win average the targets imply matches
-the fake math's own (base 2.17x / 2.23x, WILD BOOST 2.51x / 2.49x, ACTIVATE WHEEL 2.24x / 2.23x, both 2.54x / 2.54x).
+the fake math's own (base 2.21x / 2.23x, WILD BOOST 2.51x / 2.49x, ACTIVATE WHEEL 2.22x / 2.23x, both 2.56x / 2.54x). base, ACTIVATE WHEEL and both were re-measured after their frame
+catches were trimmed to bring the fake math to 96% (BASE_STRIKE 0.12, WHEEL_STRIKE 0.14, BOTH_STRIKE 0.38).
 
 Line-win scaling (2026-09-13). The optimizer builds each bucket's distribution over its distinct win amounts, and to hit
 the bucket's average it mixes in candidates weighted hard below half the average, so with no scaling it moved base-mode
 line wins from 1-5x to under 1x: plain base spins winning 1-4.9x went from 10.7% (natural) to 5.1%, and a base win of 1x
-or more from 1 spin in 7.7 to 1 in 12.0. Base-mode trials on the v3 books (plain base spins 1-4.9x / win of 1x or more):
-x2 in 1-5x 7.1% / 1 in 9.9; x4 in 1-5x 12.6% and 11.4% on two runs / 1 in 6.7 and 7.3; x2 in 1-2x with x4.5 in 2-5x
-8.8% / 1 in 8.7; bias toward 1-5x 4.4% / 1 in 13.1; x3 in 1-5x with x0.5 under 1x (and x0.6 at 10x+) piled into 1-1.9x.
-x4 in 1-5x is used for every base-strip mode (their natural line-win spreads match base's); buys are unscaled.
+or more from 1 spin in 7.7 to 1 in 12.0. x4 in 1-5x restored the count but piled it into 1-1.9x (38% of line wins
+against 21% natural), leaving 2-4.9x at 20% (34% natural); a bias toward 1-5x did nothing. Base-mode split ranges, 20
+candidates each (2 optimizer runs x 10): share of line wins at 2-4.9x (natural 33.6%), and distance from the natural
+spread (the sum of the band gaps):
+  x4 in 1-5x                    20.1% (18.7-24.4), distance 39.2
+  x6 in 2-5x                    28.1% (23.9-34.4), distance 28.7
+  x1.5 in 1-2x, x4 in 2-5x      23.1% (17.7-41.6), distance 29.1
+  x1.5 in 1-2x, x6 in 2-5x      27.5% (22.9-32.4), distance 22.8
+  x1.5 in 1-2x, x8 in 2-5x      31.5% (26.4-43.1), distance 17.4  <- LINE_WIN_SCALING, every base-strip mode
+Buys are unscaled. Single runs still vary, so run.py then publishes the closest of each mode's 10 candidates
+(game_selection.py).
 """
 
 from optimization_program.optimization_config import (
@@ -44,14 +52,17 @@ WINCAP_HIT_RATE = {
 
 # Base-strip modes: free spins and WILD STRIKE as (RTP share of the mode's 96%, one round in N), and line wins' one in N.
 BASE_TARGETS = {
-    "base": {"freegame": (0.3029, 199.7), "wildstrike": (0.2428, 82.1), "basegame_hit_rate": 5.28},
+    "base": {"freegame": (0.3103, 199.8), "wildstrike": (0.2271, 88.9), "basegame_hit_rate": 5.27},
     "base_wild_boost": {"freegame": (0.1057, 199.2), "wildstrike": (0.6769, 11.5), "basegame_hit_rate": 4.74},
-    "base_activate_wheel": {"freegame": (0.7419, 43.0), "wildstrike": (0.0776, 83.7), "basegame_hit_rate": 5.37},
-    "base_wild_boost_activate_wheel": {"freegame": (0.5516, 29.1), "wildstrike": (0.3221, 12.0), "basegame_hit_rate": 4.95},
+    "base_activate_wheel": {"freegame": (0.7376, 43.0), "wildstrike": (0.083, 78.0), "basegame_hit_rate": 5.38},
+    "base_wild_boost_activate_wheel": {"freegame": (0.5553, 29.2), "wildstrike": (0.3174, 12.4), "basegame_hit_rate": 4.93},
 }
 
-# Base-strip modes: line wins of 1-5x weighted x4 while the optimizer builds the basegame bucket (see the docstring).
-LINE_WIN_SCALING = [{"criteria": "basegame", "scale_factor": 4.0, "win_range": (1, 5), "probability": 1.0}]
+# Base-strip modes: line wins of 1-1.99x weighted x1.5 and 2-5x x8 while the optimizer builds the basegame bucket.
+LINE_WIN_SCALING = [
+    {"criteria": "basegame", "scale_factor": 1.5, "win_range": (1, 1.99), "probability": 1.0},
+    {"criteria": "basegame", "scale_factor": 8.0, "win_range": (2, 5), "probability": 1.0},
+]
 
 SCATTER_RECORD = {"symbol": "scatter"}
 BASE_STRIKE_RECORD = {"wild_strike": "basegame"}

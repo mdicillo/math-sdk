@@ -9,6 +9,11 @@ and the more beam, the likelier WILD STRIKE: new wilds with 3x-10x multipliers s
 BONUS). On a line, the multipliers of its WILDs are added together. Every strike's spin pays at least 5x and at
 most the base-game ceiling (2500x; 5000x with WILD BOOST on). Naturally landed base-game WILDs are 1x.
 
+Free spins: 3 BONUS symbols award 10 free spins on the free-spin strip, naturally landed WILDs 2x. With ACTIVATE
+WHEEL on, the wheel spins first and its multiplier (3x/4x/5x/7x/10x) replaces the 2x. Every free spin has the
+frame and WILD STRIKE (free-spin chances), the feature's first strike is guaranteed, 3 BONUS symbols add 5 spins
+up to 30, and a feature always pays at least 15x (its wins only, the triggering spin's win left out).
+
 Source of truth: the thunderborne-rebuild fake math (src/config/gameConfig.ts, src/rgs/fakeMath/).
 Reel strips in reels/ are exported from it exactly. Symbol ids match the client: T = "10", N = "9".
 Parity: in thunderborne-rebuild, `npm run parity` checks this game's debug books against the fake math.
@@ -30,13 +35,17 @@ Reels:
   BR_WBAW  both antes base game    (ANTE_STRIPS.both)
   FR0      every free-spin feature (FREE_STRIP)
 
+Criteria (base-strip modes, debug): "freegame" books force the trigger (FREEGAME_QUOTA of the books), "basegame"
+books re-draw any board showing 3 BONUS symbols. The optimizer sets how often each comes in the published game.
+
 Custom events (rows count the padding row, as winInfo's positions do):
   wildFrame   {cell: {reel, row}, beams: [{reel, row}]}   after every reveal
   wildStrike  {wilds: [{reel, row, mult}]}                 after wildFrame, before winInfo
+  wheelSpin   {multiplier}                                 right before freeSpinTrigger (ACTIVATE WHEEL modes)
 
 Port status:
-  Step 1 - grid, paytable, paylines, strips, bet modes (line wins only, uniform board draws).
+  Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
   Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST).
-           Free spins still off.
+  Step 3 - natural free spins: FREE_STRIKE, the guaranteed strike, retriggers to 30, the 15x floor, the wheel.
            Debug: PYTHONPATH=. python3 games/thunderborne/run_debug.py
-  Later  - free spins, buys, ante features, optimizer criteria, event alignment.
+  Later  - buys, optimizer criteria, event alignment.

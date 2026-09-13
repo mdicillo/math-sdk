@@ -26,3 +26,13 @@ def wild_strike_event(gamestate):
         "wilds": [{**padded(gamestate, wild), "mult": wild["mult"]} for wild in gamestate.strike_wilds],
     }
     gamestate.book.add_event(event)
+
+
+def wheel_spin_event(gamestate):
+    """The wheel lands on the feature's WILD multiplier, right before the free-spin trigger."""
+    event = {
+        "index": len(gamestate.book.events),
+        "type": "wheelSpin",
+        "multiplier": gamestate.feature_mult,
+    }
+    gamestate.book.add_event(event)

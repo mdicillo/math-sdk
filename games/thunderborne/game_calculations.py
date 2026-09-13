@@ -17,6 +17,17 @@ class GameCalculations(Executables):
             if not self.board[reel][row].check_attribute("wild", "scatter")
         ]
 
+    def ensure_wild(self) -> None:
+        """A feature's guaranteed strike: plant a WILD on a random open cell, unless one already landed."""
+        if any(symbol.check_attribute("wild") for column in self.board for symbol in column):
+            return
+        open_cells = self.open_cells()
+        if not open_cells:
+            return
+        cell = random.choice(open_cells)
+        self.board[cell["reel"]][cell["row"]] = self.create_symbol("W")
+        self.get_special_symbols_on_board()
+
     def strike_wild(self, mult: int):
         """A new WILD STRIKE wild carrying `mult`."""
         wild = self.create_symbol("W")

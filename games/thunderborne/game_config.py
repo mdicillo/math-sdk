@@ -68,8 +68,9 @@ STRIKE_MULTIPLIERS = {3: 40, 4: 25, 5: 17, 7: 11, 10: 7}
 # chance_by_beams: strike chance with 1, 2, 3+ beaming WILDs. floor / ceiling: a strike's spin pays between them
 # (× base bet). aim_tries: random placements tried at a size; aim_lean: the in-range ones are picked with weight
 # pay^-aim_lean. resizes: how many times a strike that can't land in range changes its size by one wild.
+# Base game (and ACTIVATE WHEEL alone): 1 base spin in 82 at ~20x on the v3 strips (2026-09-13; was 0.355, 1 in 50).
 BASE_STRIKE = {
-    "frame_on_wild": 0.355,
+    "frame_on_wild": 0.13,
     "chance_by_beams": [0.25, 0.5, 0.75],
     "sizes": STRIKE_SIZES,
     "multipliers": STRIKE_MULTIPLIERS,
@@ -80,10 +81,10 @@ BASE_STRIKE = {
     "resizes": 6,
 }
 
-# WILD BOOST (alone or with ACTIVATE WHEEL): the frame catches WILDs more often, each beam is likelier to strike, and
-# the base-game ceiling lifts to MAX_WIN.
+# WILD BOOST: the frame catches WILDs more often, each beam is likelier to strike, and the base-game ceiling lifts to
+# MAX_WIN. The frame catch sets the mode's RTP (v3 strips: 0.40, was 0.57).
 BOOST_STRIKE = {
-    "frame_on_wild": 0.57,
+    "frame_on_wild": 0.4,
     "chance_by_beams": [0.4, 0.65, 0.9],
     "sizes": STRIKE_SIZES,
     "multipliers": STRIKE_MULTIPLIERS,
@@ -93,6 +94,9 @@ BOOST_STRIKE = {
     "aim_lean": 3.25,
     "resizes": 6,
 }
+
+# Both antes together: BOOST_STRIKE with its own frame catch (provider.ts BOTH_STRIKE).
+BOTH_STRIKE = {**BOOST_STRIKE, "frame_on_wild": 0.39}
 
 # Every feature's WILD STRIKE: likelier per beam than the base game, and the first strike of a feature is guaranteed.
 FREE_STRIKE = {
@@ -133,7 +137,7 @@ MODE_BASE_STRIKE = {
     "base": BASE_STRIKE,
     "base_wild_boost": BOOST_STRIKE,
     "base_activate_wheel": BASE_STRIKE,
-    "base_wild_boost_activate_wheel": BOOST_STRIKE,
+    "base_wild_boost_activate_wheel": BOTH_STRIKE,
 }
 
 # Free spins (provider.ts), the same rules for every feature.

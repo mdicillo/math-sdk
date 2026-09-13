@@ -68,8 +68,11 @@ Both at 10,000 books a mode (debug). Certification (100,000 a mode) waits for th
 
 Port status:
   Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
-  Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST).
+  Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST, BOTH_STRIKE with both antes).
   Step 3 - natural free spins: FREE_STRIKE, the guaranteed strike, retriggers to 30, the 15x floor, the wheel.
   Step 4 - the buys: BONUS, SUPER BONUS, WHEEL BONUS.
   Step 5 - optimizer: wincap and wildstrike criteria, game_optimization.py, run.py (debug scale).
-  Later  - tuning against the PAR sheet, event alignment, the certification run.
+  Step 6 - the v3 base layout (2026-09-13): BR0 / BR_WB / BR_AW / BR_WBAW re-exported, BASE_STRIKE 0.13,
+           BOOST_STRIKE 0.40 and BOTH_STRIKE (both antes) 0.39.
+  Step 7 - v3 optimizer targets (BASE_TARGETS re-measured) and line-win scaling (x4 in 1-5x, base-strip modes).
+  Later  - tuning against the PAR sheet, the certification run.

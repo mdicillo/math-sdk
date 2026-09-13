@@ -12,10 +12,12 @@ class GameStateOverride(GameExecutables):
 
     def reset_book(self):
         super().reset_book()
-        # WILD STRIKE: the frame's cell, the WILDs beaming from it, and the strike's new wilds for this spin.
+        # WILD STRIKE: the frame's cell, the WILDs beaming from it, and the strike's new wilds for this spin; whether the
+        # base spin struck.
         self.frame_cell = None
         self.beams = []
         self.strike_wilds = []
+        self.base_strike = False
         # Free spins: the natural WILDs' multiplier and how many strikes the feature has had.
         self.feature_mult = FEATURE_WILD_MULT
         self.feature_strikes = 0
@@ -60,13 +62,18 @@ class GameStateOverride(GameExecutables):
 
     def check_repeat(self):
         super().check_repeat()
+        if self.repeat is not False:
+            return
+        conditions = self.get_current_distribution_conditions()
         # Every feature has at least one WILD STRIKE and pays at least its floor; a round whose feature doesn't is played
         # again (the base spin is drawn independently of the feature, so only the feature's outcome is filtered).
         # Wins are rounded to hundredths before comparing: the SDK sums line wins as floats.
-        if self.repeat is False and self.triggered_freegame:
-            floor = self.get_current_distribution_conditions()["feature_floor"]
-            if self.feature_strikes == 0 or round(self.win_manager.freegame_wins, 2) < floor:
+        if self.triggered_freegame:
+            if self.feature_strikes == 0 or round(self.win_manager.freegame_wins, 2) < conditions["feature_floor"]:
                 self.repeat = True
+        # A "wildstrike" book is played again until its base spin strikes (natural strikes only: nothing is forced).
+        if conditions["force_wildstrike"] and not self.base_strike:
+            self.repeat = True
 
     def evaluate_wincap(self) -> None:
         """Stop the round's spins once its win reaches the wincap (Executables.evaluate_wincap), with the running win

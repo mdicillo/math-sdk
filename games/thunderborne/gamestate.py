@@ -16,13 +16,14 @@ class GameState(GameStateOverride):
         self.repeat = True
         while self.repeat:
             self.reset_book()
-            # "freegame" books force 3 BONUS symbols; "basegame" books re-draw any board showing them.
+            # "freegame" / "wincap" books force 3 BONUS symbols; every other book re-draws any board showing them.
             self.draw_board()
 
             # WILD STRIKE: the frame settles, beaming WILDs may strike, then the lines evaluate with the new wilds.
             strike = self.get_current_distribution_conditions()["wild_strike"]
             self.place_wild_frame(strike)
             self.run_wild_strike(strike)
+            self.base_strike = bool(self.strike_wilds)
 
             # Evaluate wins, update wallet, transmit events
             self.evaluate_lines_board()

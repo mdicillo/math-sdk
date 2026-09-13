@@ -19,8 +19,8 @@ feature plays by the same rules. BONUS: 10 spins, WILDs 2x. SUPER BONUS: 20 spin
 wheel, then 10 spins at its multiplier. A bought feature pays at least 15% of its price (15x / 45x / 22.5x).
 
 Source of truth: the thunderborne-rebuild fake math (src/config/gameConfig.ts, src/rgs/fakeMath/).
-Reel strips in reels/ are exported from it exactly. Symbol ids match the client: T = "10", N = "9".
-Parity: in thunderborne-rebuild, `npm run parity` checks this game's debug books against the fake math.
+Reel strips in reels/ are exported from it exactly (FRWCAP is SDK-only, see below). Symbol ids match the client:
+T = "10", N = "9". Parity: in thunderborne-rebuild, `npm run parity` checks this game's books against the fake math.
 
 Bet modes:
   base                             1x
@@ -38,10 +38,15 @@ Reels:
   BR_AW    ACTIVATE WHEEL base game (ANTE_STRIPS.wheel_ante, 400 cells)
   BR_WBAW  both antes base game    (ANTE_STRIPS.both)
   FR0      every free-spin feature (FREE_STRIP)
+  FRWCAP   WILD-heavy free-spin strip for max-win books only (SDK only)
 
-Criteria (debug): base-strip modes split into "freegame" books, which force the trigger (FREEGAME_QUOTA of the
-books), and "basegame" books, which re-draw any board showing 3 BONUS symbols. Buys are all "freegame". The
-optimizer sets how often each comes, and weights the bought books to 96%.
+Criteria (the books' kinds; the optimizer sets how often each comes in the published game):
+  wincap      the trigger forced and the feature played on FRWCAP with WINCAP_STRIKE until the round pays 5000x
+  freegame    the trigger forced (buys: every other book)
+  wildstrike  base-strip modes: played again until the base spin strikes (no trigger)
+  basegame    base-strip modes: no trigger (a board showing 3 BONUS symbols is re-drawn)
+Optimizer buckets (game_optimization.py), in order: wincap, freegame, wildstrike, 0, basegame (buys: wincap,
+freegame). Targets are the fake math's measured split scaled to 96% and its max-win rates.
 
 Deviations from the fake math:
   - A buy's trigger board is drawn like a natural trigger (force_special_board: a BONUS symbol at a random row of
@@ -49,16 +54,22 @@ Deviations from the fake math:
   - The fake math's BUY_WEIGHTING (keep one of several plays by total^lean) is not ported: bought features are
     simulated plainly and the optimizer re-weights them.
   - A feature under its floor or without a strike is always replayed; the fake math gives up after 50 replays.
+  - Max-win books play their feature on FRWCAP with WINCAP_STRIKE (the fake math has no forced max wins).
 
 Custom events (rows count the padding row, as winInfo's positions do):
   wildFrame   {cell: {reel, row}, beams: [{reel, row}]}   after every reveal
   wildStrike  {wilds: [{reel, row, mult}]}                 after wildFrame, before winInfo
   wheelSpin   {multiplier}                                 right before freeSpinTrigger (the wheel feature)
 
+Running:
+  PYTHONPATH=. python3 games/thunderborne/run.py         sims (compressed), optimizer, PAR sheet, format checks
+  PYTHONPATH=. python3 games/thunderborne/run_debug.py   sims only, readable books, config files
+Both at 10,000 books a mode (debug). Certification (100,000 a mode) waits for the user's go-ahead.
+
 Port status:
   Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
   Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST).
   Step 3 - natural free spins: FREE_STRIKE, the guaranteed strike, retriggers to 30, the 15x floor, the wheel.
-  Step 4 - the buys: BONUS, SUPER BONUS, WHEEL BONUS (unweighted; config files written).
-           Debug: PYTHONPATH=. python3 games/thunderborne/run_debug.py
-  Later  - optimizer criteria (zero-win, wincap, strike buckets) and weights, event alignment.
+  Step 4 - the buys: BONUS, SUPER BONUS, WHEEL BONUS.
+  Step 5 - optimizer: wincap and wildstrike criteria, game_optimization.py, run.py (debug scale).
+  Later  - tuning against the PAR sheet, event alignment, the certification run.

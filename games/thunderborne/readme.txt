@@ -68,11 +68,16 @@ Both at 10,000 books a mode (debug). Certification (100,000 a mode) waits for th
 
 Port status:
   Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
-  Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST, BOTH_STRIKE with both antes).
+  Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST, WHEEL_STRIKE with ACTIVATE WHEEL, BOTH_STRIKE with
+           both antes).
   Step 3 - natural free spins: FREE_STRIKE, the guaranteed strike, retriggers to 30, the 15x floor, the wheel.
   Step 4 - the buys: BONUS, SUPER BONUS, WHEEL BONUS.
   Step 5 - optimizer: wincap and wildstrike criteria, game_optimization.py, run.py (debug scale).
   Step 6 - the v3 base layout (2026-09-13): BR0 / BR_WB / BR_AW / BR_WBAW re-exported, BASE_STRIKE 0.13,
            BOOST_STRIKE 0.40 and BOTH_STRIKE (both antes) 0.39.
   Step 7 - v3 optimizer targets (BASE_TARGETS re-measured) and line-win scaling (x4 in 1-5x, base-strip modes).
+  Step 8 - frame catches trimmed so the fake math plays 96% (BASE_STRIKE 0.12, WHEEL_STRIKE 0.14 for ACTIVATE
+           WHEEL, BOTH_STRIKE 0.38) and those modes' BASE_TARGETS re-measured.
+  Step 9 - line-win scaling split (x1.5 in 1-2x, x8 in 2-5x) and game_selection.py: run.py publishes each
+           base-strip mode's optimizer candidate closest to the books' natural line-win spread.
   Later  - tuning against the PAR sheet, the certification run.

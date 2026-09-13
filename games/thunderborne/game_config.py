@@ -1,7 +1,7 @@
 """Thunderborne game configuration, inherits from src/config/config.py.
 
-Source of truth: the rebuild's fake math (thunderborne-rebuild src/config/gameConfig.ts). Reel strips are exported
-from it exactly (reels/*.csv); symbol ids match the client (T = "10", N = "9").
+Source of truth: the rebuild's fake math (thunderborne-rebuild src/config/gameConfig.ts, src/rgs/fakeMath/provider.ts).
+Reel strips are exported from it exactly (reels/*.csv); symbol ids match the client (T = "10", N = "9").
 """
 
 import os
@@ -11,6 +11,9 @@ from src.config.betmode import BetMode
 
 # Maximum payout for a single round, in multiples of the base bet. The round ends there, even mid-feature.
 MAX_WIN = 5000.0
+
+# The most a base-game spin pays (× base bet): WILD STRIKE is never aimed past it. WILD BOOST lifts it to MAX_WIN.
+BASE_WIN_CEILING = 2500.0
 
 # Win-level ladders (× base bet), gameConfig.ts WIN_LEVEL_BANDS: each value is a level's upper edge; a win below
 # edge N is level N (1-based), at or above the last edge (the wincap) level 11. "standard" scores one spin's win,
@@ -37,6 +40,63 @@ MODE_BASE_REELS = {
     "base_wild_boost": "BR_WB",
     "base_activate_wheel": "BR_AW",
     "base_wild_boost_activate_wheel": "BR_WBAW",
+}
+
+# WILD STRIKE (provider.ts StrikeTuning). A strike size that fills every open cell (neither WILD nor BONUS).
+FULL_BOARD = "full"
+
+# How many wilds a strike adds: {(from, to): weight}, a count from..to at random.
+STRIKE_SIZES = {
+    (1, 1): 30,
+    (2, 2): 25,
+    (3, 3): 18,
+    (4, 4): 11,
+    (5, 5): 7,
+    (6, 6): 4,
+    (7, 9): 0.3,
+    (10, 14): 0.1,
+    (FULL_BOARD, FULL_BOARD): 0.03,
+}
+
+# Each new wild's multiplier: {multiplier: weight}.
+STRIKE_MULTIPLIERS = {3: 40, 4: 25, 5: 17, 7: 11, 10: 7}
+
+# frame_on_wild: on a spin where WILDs land, the chance the frame settles on one (then every landed WILD beams).
+# chance_by_beams: strike chance with 1, 2, 3+ beaming WILDs. floor / ceiling: a strike's spin pays between them
+# (× base bet). aim_tries: random placements tried at a size; aim_lean: the in-range ones are picked with weight
+# pay^-aim_lean. resizes: how many times a strike that can't land in range changes its size by one wild.
+BASE_STRIKE = {
+    "frame_on_wild": 0.355,
+    "chance_by_beams": [0.25, 0.5, 0.75],
+    "sizes": STRIKE_SIZES,
+    "multipliers": STRIKE_MULTIPLIERS,
+    "floor": 5,
+    "ceiling": BASE_WIN_CEILING,
+    "aim_tries": 40,
+    "aim_lean": 3.25,
+    "resizes": 6,
+}
+
+# WILD BOOST (alone or with ACTIVATE WHEEL): the frame catches WILDs more often, each beam is likelier to strike, and
+# the base-game ceiling lifts to MAX_WIN.
+BOOST_STRIKE = {
+    "frame_on_wild": 0.57,
+    "chance_by_beams": [0.4, 0.65, 0.9],
+    "sizes": STRIKE_SIZES,
+    "multipliers": STRIKE_MULTIPLIERS,
+    "floor": 5,
+    "ceiling": MAX_WIN,
+    "aim_tries": 40,
+    "aim_lean": 3.25,
+    "resizes": 6,
+}
+
+# Base-game WILD STRIKE tuning for each mode that spins the base game.
+MODE_BASE_STRIKE = {
+    "base": BASE_STRIKE,
+    "base_wild_boost": BOOST_STRIKE,
+    "base_activate_wheel": BASE_STRIKE,
+    "base_wild_boost_activate_wheel": BOOST_STRIKE,
 }
 
 
@@ -128,9 +188,9 @@ class GameConfig(Config):
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
 
-        # Step 1 (grid, pays, strips, modes): every base-strip mode is a single "basegame" criteria with its own strip.
-        # WILD STRIKE, the frame and free spins come in later steps, with their criteria.
-        def base_modes_step1(name):
+        # Steps 1–2 (grid, pays, strips, modes, base-game WILD STRIKE): every base-strip mode is a single "basegame"
+        # criteria with its own strip and strike tuning. Free spins come in a later step, with their criteria.
+        def base_modes(name):
             return [
                 Distribution(
                     criteria="basegame",
@@ -140,6 +200,7 @@ class GameConfig(Config):
                             self.basegame_type: {MODE_BASE_REELS[name]: 1},
                             self.freegame_type: {"FR0": 1},
                         },
+                        "wild_strike": MODE_BASE_STRIKE[name],
                         "force_wincap": False,
                         "force_freegame": False,
                     },
@@ -174,7 +235,7 @@ class GameConfig(Config):
                     auto_close_disabled=False,
                     is_feature=True,
                     is_buybonus=False,
-                    distributions=base_modes_step1(name),
+                    distributions=base_modes(name),
                 )
             )
         for name in ["bonus", "super_bonus", "wheel_bonus"]:

@@ -4,8 +4,14 @@
 WILD (W) substitutes for every symbol except BONUS (S). 3 BONUS symbols (one per reel) trigger free spins.
 Max win 5000x in every mode; the round ends there.
 
+WILD STRIKE: every spin a frame settles on one cell. When a WILD lands in it, every WILD on the board beams to Thor,
+and the more beam, the likelier WILD STRIKE: new wilds with 3x-10x multipliers strike open cells (neither WILD nor
+BONUS). On a line, the multipliers of its WILDs are added together. Every strike's spin pays at least 5x and at
+most the base-game ceiling (2500x; 5000x with WILD BOOST on). Naturally landed base-game WILDs are 1x.
+
 Source of truth: the thunderborne-rebuild fake math (src/config/gameConfig.ts, src/rgs/fakeMath/).
 Reel strips in reels/ are exported from it exactly. Symbol ids match the client: T = "10", N = "9".
+Parity: in thunderborne-rebuild, `npm run parity` checks this game's debug books against the fake math.
 
 Bet modes:
   base                             1x
@@ -24,7 +30,13 @@ Reels:
   BR_WBAW  both antes base game    (ANTE_STRIPS.both)
   FR0      every free-spin feature (FREE_STRIP)
 
+Custom events (rows count the padding row, as winInfo's positions do):
+  wildFrame   {cell: {reel, row}, beams: [{reel, row}]}   after every reveal
+  wildStrike  {wilds: [{reel, row, mult}]}                 after wildFrame, before winInfo
+
 Port status:
-  Step 1 - grid, paytable, paylines, strips, bet modes; features off (line wins only, uniform board draws).
+  Step 1 - grid, paytable, paylines, strips, bet modes (line wins only, uniform board draws).
+  Step 2 - base-game WILD STRIKE: the frame, beams, aimed strikes (BASE_STRIKE; BOOST_STRIKE with WILD BOOST).
+           Free spins still off.
            Debug: PYTHONPATH=. python3 games/thunderborne/run_debug.py
-  Later  - WILD STRIKE frame + strikes, free spins, buys, antes, optimizer criteria, event alignment.
+  Later  - free spins, buys, ante features, optimizer criteria, event alignment.

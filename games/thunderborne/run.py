@@ -1,7 +1,7 @@
 """Full pipeline for thunderborne: simulate every bet mode, optimize the lookup tables, publish each base-strip mode's
 candidate closest to its natural line-win spread (game_selection.py), write the PAR sheet and run the RGS format checks.
 
-Debug scale: 10,000 books a mode. Certification is 100,000 a mode, only once the user approves that run.
+Certification scale: 100,000 books a mode (user go-ahead, 2026-09-13; run_debug.py stays at 10,000).
 Books are compressed here (publish_files/books_<mode>.jsonl.zst); run_debug.py writes readable ones.
 """
 
@@ -24,13 +24,13 @@ if __name__ == "__main__":
     profiling = False
 
     num_sim_args = {
-        "base": int(1e4),
-        "base_wild_boost": int(1e4),
-        "base_activate_wheel": int(1e4),
-        "base_wild_boost_activate_wheel": int(1e4),
-        "bonus": int(1e4),
-        "super_bonus": int(1e4),
-        "wheel_bonus": int(1e4),
+        "base": int(1e5),
+        "base_wild_boost": int(1e5),
+        "base_activate_wheel": int(1e5),
+        "base_wild_boost_activate_wheel": int(1e5),
+        "bonus": int(1e5),
+        "super_bonus": int(1e5),
+        "wheel_bonus": int(1e5),
     }
 
     run_conditions = {

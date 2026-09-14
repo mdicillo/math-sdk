@@ -60,11 +60,14 @@ Custom events (rows count the padding row, as winInfo's positions do):
   wildFrame   {cell: {reel, row}, beams: [{reel, row}]}   after every reveal
   wildStrike  {wilds: [{reel, row, mult}]}                 after wildFrame, before winInfo
   wheelSpin   {multiplier}                                 right before freeSpinTrigger (the wheel feature)
+Standard events are the SDK's, except that a free spin that wins nothing sends no setTotalWin (the round's total hasn't
+changed; game_executables.py evaluate_lines_board). At 100,000 books that keeps SUPER BONUS (~94 events a book) under
+Stake's 10,000,000 events a mode; with it, ~108 a book came to ~10.8M. Base spins still always send it.
 
 Running:
   PYTHONPATH=. python3 games/thunderborne/run.py         sims (compressed), optimizer, PAR sheet, format checks
   PYTHONPATH=. python3 games/thunderborne/run_debug.py   sims only, readable books, config files
-Both at 10,000 books a mode (debug). Certification (100,000 a mode) waits for the user's go-ahead.
+run.py: 100,000 books a mode (certification, user go-ahead 2026-09-13). run_debug.py: 10,000 a mode (debug).
 
 Port status:
   Step 1 - grid, paytable, paylines, strips, bet modes (line wins only).
@@ -80,4 +83,11 @@ Port status:
            WHEEL, BOTH_STRIKE 0.38) and those modes' BASE_TARGETS re-measured.
   Step 9 - line-win scaling split (x1.5 in 1-2x, x8 in 2-5x) and game_selection.py: run.py publishes each
            base-strip mode's optimizer candidate closest to the books' natural line-win spread.
-  Later  - tuning against the PAR sheet, the certification run.
+  Step 10 - certification (2026-09-13): a free spin that wins nothing sends no setTotalWin (Stake's event limit),
+            then run.py at 100,000 books a mode. game_selection.py caps every book at 1% of a base-strip table's weight
+            (MAX_BOOK_SHARE): the optimizer weights each distinct payout and splits it among its books, so at 100,000
+            books WILD BOOST's only 1.2x book came up 1 round in 31. The excess moves to the payouts either side in the
+            same bucket, keeping each bucket's weight and average win. At 100,000 books the published line-win spread
+            is 25-44 from natural (6-14 at 10,000); scaling trials didn't close it, and the user kept the certified
+            tables with the cap.
+  Later  - tuning against the PAR sheet.

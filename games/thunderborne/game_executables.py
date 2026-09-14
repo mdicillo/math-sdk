@@ -7,11 +7,14 @@ from src.calculations.lines import Lines
 class GameExecutables(GameCalculations):
 
     def evaluate_lines_board(self):
-        """Populate win-data, record wins, transmit events."""
+        """Populate win-data, record wins, transmit events. A free spin that wins nothing sends no setTotalWin: the round's
+        total hasn't changed, and at 100,000 books it keeps SUPER BONUS under Stake's 10,000,000 events a mode (user
+        decision, 2026-09-13)."""
         self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
         Lines.record_lines_wins(self)
         self.win_manager.update_spinwin(self.win_data["totalWin"])
-        Lines.emit_linewin_events(self)
+        if self.win_manager.spin_win > 0 or self.gametype == self.config.basegame_type:
+            Lines.emit_linewin_events(self)
 
     def place_wild_frame(self, tuning: dict, on_wild: bool = False) -> None:
         """WILD STRIKE's frame, settled before the reels stop: on a landed WILD when `on_wild` (a feature's guaranteed

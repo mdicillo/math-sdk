@@ -30,7 +30,8 @@ them instead of the SDK's read_reels_csv): base, wild_ante, fs_sheriff, fs_posse
 fs_buy_posse, fs_buy_showdown. The outline's anticipation_* strips are display-only (the client spins reels on them)
 and are not math reelsets.
 
-Custom events beyond step 1: `sharpshooter` {wilds: [{reel, row, from, multiplier}], guaranteed: {cells, fallback},
+Custom events beyond step 1: `showdown` {board, gameType, modifier, sheriffValue, challenger?, winner?, number?,
+awardX, amount} instead of reveal + winInfo on a Showdown spin; `sharpshooter` {wilds: [{reel, row, from, multiplier}], guaranteed: {cells, fallback},
 board, multipliers} after reveal, before winInfo (rows 0-4; there are no padding rows in the game's events).
 
 Running:
@@ -54,3 +55,12 @@ Port status:
            over 64,000, share / avg / median by wild count matching the spec's section 7 table; whole reel-spin
            return vs engine.py: base 0.5475 +/- 0.0030 (0.5488), wild_ante 2.514 +/- 0.014 (2.502);
            parity:sdk 0 differences on 40,000 books. The Python rebuild costs ~0.1 s a Sharpshooter.
+  Step 3 - Showdown (section 8) in the reel-spin modes: drawn before the reels at each mode's chance (base / WILD Ante /
+           SHARPSHOOTER Ante 1 in 126, SHOWDOWN Ante 1 in 10.2), base modifier odds 70 / 27.5 / 2.5 and the base number
+           tables (solved X5000 weight); VS bounty 10 + value at 75%, + 10 + n, X 10 x n, capped at 50,000x.
+           Event: showdown.
+           Verified: 3,000,000 draws against the exact outcome distribution built from the spec's tables (29
+           outcomes, chi2 31.8 on 28 dof, p = 0.28; no unknown outcome, no pay mismatch; exact avg 22.14595x = spec);
+           a forced X5000 book pays 5,000,000 with finalWin.maxWin; parity:sdk 0 differences on 40,000 books.
+           (engine.showdown_outcomes reads config.py's unsolved X5000 weight 0.02; the spec's solved weight is
+           0.6328 - the spec is what's ported.)

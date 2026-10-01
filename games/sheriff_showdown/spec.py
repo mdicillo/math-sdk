@@ -112,3 +112,35 @@ BASE_MODES["sharpshooter_ante"]["sharpshooter"] = {
 }
 for _strip_id in STRIP_SET_IDS:
     assert 0 <= SHARPSHOOTER_RATE[_strip_id] < 1, f"no Sharpshooter chance for {_strip_id}"
+
+# Showdown (section 8).
+SHERIFF_VALUE = SPEC["showdown"]["sheriff_value"]
+SHERIFF_WIN_CHANCE = SPEC["showdown"]["sheriff_win_chance_vs"]
+# Challengers: board id (the name upper-cased, e.g. BANDIT) -> value, and their draw weights.
+CHALLENGERS = {name.upper(): c["value"] for name, c in SPEC["showdown"]["characters"].items()}
+CHALLENGER_WEIGHTS = {name.upper(): c["weight"] for name, c in SPEC["showdown"]["characters"].items()}
+# Number tables {table: {"PLUS": {number: weight}, "X": {...}}}, without zero-weight entries (+ draws 3-9, X 10-5000).
+NUMBER_TABLES = {
+    tid: {
+        mod: {int(n): v["weight"] for n, v in table[key].items() if v["weight"] > 0}
+        for mod, key in (("PLUS", "plus"), ("X", "x"))
+    }
+    for tid, table in SPEC["showdown"]["number_tables"].items()
+}
+
+
+def showdown_context(rate: float, odds_key: str) -> dict:
+    """Everything a Showdown draw needs for one context: its chance per spin, VS / PLUS / X odds and number table."""
+    probs = SPEC["showdown"]["modifier_probs_VS_plus_X"][odds_key]
+    return {
+        "rate": rate,
+        "modifiers": dict(zip(("VS", "PLUS", "X"), probs)),
+        "table": SPEC["showdown"]["number_table_used"][odds_key],
+    }
+
+
+# The base game and every ante share the base modifier odds and number table; each has its own chance per spin.
+BASE_MODES["base"]["showdown"] = showdown_context(SPEC["showdown"]["rate_per_spin"]["base"], "base")
+BASE_MODES["wild_ante"]["showdown"] = showdown_context(SPEC["antes"]["wild"]["showdown_rate"], "base")
+BASE_MODES["showdown_ante"]["showdown"] = showdown_context(SPEC["antes"]["showdown"]["showdown_rate"], "base")
+BASE_MODES["sharpshooter_ante"]["showdown"] = showdown_context(_SHARP_ANTE["showdown_rate"], "base")

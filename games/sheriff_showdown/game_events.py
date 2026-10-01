@@ -6,6 +6,9 @@ Money fields are book units: 100 = 1.00x the base bet (`to_units`). Multiples of
 """
 
 
+from spec import SHERIFF_VALUE
+
+
 def to_units(x: float) -> int:
     """x base bet -> book units (100 = 1.00x). Every pay in this game is a multiple of 0.5x, so this is exact."""
     units = round(x * 100)
@@ -34,6 +37,26 @@ def reveal_event(gamestate, result: dict) -> None:
             "gameType": gamestate.gametype,
         },
     )
+
+
+def showdown_event(gamestate, sd: dict, paid: int) -> None:
+    """Instead of reveal + winInfo on a Showdown spin. `paid` (book units) is the award as paid, clamped at the max
+    win; `awardX` is the drawn award x bet."""
+    event = {
+        "type": "showdown",
+        "board": sd["board"],
+        "gameType": gamestate.gametype,
+        "modifier": sd["modifier"],
+        "sheriffValue": SHERIFF_VALUE,
+    }
+    if "challenger" in sd:
+        event["challenger"] = sd["challenger"]
+        event["winner"] = sd["winner"]
+    if "number" in sd:
+        event["number"] = sd["number"]
+    event["awardX"] = sd["awardX"]
+    event["amount"] = paid
+    add_event(gamestate, event)
 
 
 def sharpshooter_event(gamestate, shot: dict) -> None:

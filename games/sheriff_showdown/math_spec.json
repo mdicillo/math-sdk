@@ -1198,9 +1198,9 @@
     0.1111996117522159
    ],
    "buy_showdown": [
-    0.5208202624151443,
+    0.4952897751610227,
     0.3,
-    0.17917973758485561
+    0.20471022483897727
    ]
   },
   "number_table_used": {
@@ -1210,7 +1210,7 @@
    "showdown": "top",
    "buy_sheriff": "base",
    "buy_posse": "posse",
-   "buy_showdown": "top"
+   "buy_showdown": "top_buy"
   },
   "number_tables": {
    "base": {
@@ -1590,6 +1590,132 @@
       "prob": 0.00030171980287639546
      }
     }
+   },
+   "top_buy": {
+    "plus": {
+     "3": {
+      "weight": 30,
+      "prob": 0.3
+     },
+     "4": {
+      "weight": 25,
+      "prob": 0.25
+     },
+     "5": {
+      "weight": 18,
+      "prob": 0.18
+     },
+     "6": {
+      "weight": 12,
+      "prob": 0.12
+     },
+     "7": {
+      "weight": 8,
+      "prob": 0.08
+     },
+     "8": {
+      "weight": 5,
+      "prob": 0.05
+     },
+     "9": {
+      "weight": 2,
+      "prob": 0.02
+     },
+     "10": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "25": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "50": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "100": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "250": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "500": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "1000": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5000": {
+      "weight": 0,
+      "prob": 0.0
+     }
+    },
+    "x": {
+     "3": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "4": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "6": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "7": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "8": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "9": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "10": {
+      "weight": 600,
+      "prob": 0.606250442057614
+     },
+     "25": {
+      "weight": 240,
+      "prob": 0.24250017682304562
+     },
+     "50": {
+      "weight": 90,
+      "prob": 0.09093756630864211
+     },
+     "100": {
+      "weight": 45,
+      "prob": 0.045468783154321055
+     },
+     "250": {
+      "weight": 8,
+      "prob": 0.008083339227434854
+     },
+     "500": {
+      "weight": 4.8,
+      "prob": 0.0048500035364609125
+     },
+     "1000": {
+      "weight": 1.8,
+      "prob": 0.001818751326172842
+     },
+     "5000": {
+      "weight": 0.09,
+      "prob": 9.09375663086421e-05
+     }
+    }
    }
   },
   "avg_award_x_bet": {
@@ -1599,7 +1725,7 @@
    "showdown": 63.525011384423834,
    "buy_sheriff": 31.88987865841647,
    "buy_posse": 54.27744349178303,
-   "buy_showdown": 70.19420220900285
+   "buy_showdown": 70.17835166728878
   }
  },
  "free_spins": {
@@ -1724,11 +1850,11 @@
    "strips": "fs_buy_showdown",
    "showdown_rate": 0.2857142857142857,
    "modifier_probs_VS_plus_X": [
-    0.5208202624151443,
+    0.4952897751610227,
     0.3,
-    0.17917973758485561
+    0.20471022483897727
    ],
-   "number_table": "top",
+   "number_table": "top_buy",
    "buy_price_x_bet": 500
   }
  },
@@ -2148,7 +2274,7 @@
    "showdown": 245.5,
    "buy_sheriff": 55.5,
    "buy_posse": 168.0,
-   "buy_showdown": 276.5
+   "buy_showdown": 304.0
   },
   "bonus_max_win_prob_per_round": {
    "sheriff": 3.385076965903957e-05,
@@ -2156,7 +2282,7 @@
    "showdown": 0.0002750260286835987,
    "buy_sheriff": 0.00011392223497456158,
    "buy_posse": 0.00011600459578678142,
-   "buy_showdown": 0.00031397889742742954
+   "buy_showdown": 0.00010810343336504368
   },
   "wild_ante_reel_spin_hit_rate": 0.260807375,
   "sharpshooter_ante_avg_award_x_bet": 287.05116175,
@@ -2171,5 +2297,16 @@
    "7": 0.0
   }
  },
- "resolve_2026_09_30": "Re-solved at large sample sizes for the Stake port (sheriff_showdown resolve.py): base Showdown rate, SHOWDOWN Ante Showdown rate, WILD Ante ladder tilt, SHARPSHOOTER Ante multiplier tilt, so every paid mode returns 96.00%. WILD Ante tilt 0.142186 (was 0.147058). Everything else unchanged."
+ "resolve_2026_09_30": "Re-solved at large sample sizes for the Stake port (sheriff_showdown resolve.py): base Showdown rate, SHOWDOWN Ante Showdown rate, WILD Ante ladder tilt, SHARPSHOOTER Ante multiplier tilt, so every paid mode returns 96.00%. WILD Ante tilt 0.142186 (was 0.147058). Everything else unchanged.",
+ "change_2026_10_01": {
+  "what": "SHOWDOWN BONUS (buy) gets its own X number table (top_buy): the top table with X500 and X1000 weights x0.60 and X5000 x0.30; its X share re-solved so its expected return (the port's exact category model) is unchanged. Every other mode, table and weight is unchanged.",
+  "why": "Stake Math Verification 2-Star limits: buy_showdown failed Tail Probability P(>=5,000x) 1.18% (limit 1.00%) and Risk Limit CVaR absolute ~23,315x (limit 20,000x). Estimated after: P(>=5,000x) ~0.80%, CVaR ~15,000x (reweighted published books).",
+  "buy_showdown_modifier_probs_VS_plus_X_before": [
+   0.5208202624151443,
+   0.3,
+   0.17917973758485561
+  ],
+  "buy_showdown_number_table_before": "top",
+  "solver": "math-sdk games/sheriff_showdown targets.py model (fs_count_distribution + bonus_classes), X share bisected to the model RTP before the change"
+ }
 }

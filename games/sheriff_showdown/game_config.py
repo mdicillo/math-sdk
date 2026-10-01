@@ -92,3 +92,19 @@ class GameConfig(Config):
                     distributions=distributions(name, mode["free_spins"]["strips"]),
                 )
             )
+
+        # The published categories, described as the SDK's "fences" (library/configs/math_config.json): the PAR sheet
+        # (utils/game_analytics) splits each mode by them. No optimizer runs on this game (weights.py publishes the
+        # weights); hr is one round in N, rtp the category's share of the mode's return at its target.
+        self.opt_params = {}
+        for bm in self.bet_modes:
+            conditions = {}
+            for c in categories(bm.get_name()):
+                conditions[c["name"]] = {
+                    "hr": round(1 / c["prob"], 6),
+                    "rtp": round(c["prob"] * c["target"] / bm.get_cost(), 10),
+                    "av_win": None,
+                    "force_search": {"category": c["name"]},
+                    "search_range": (-1, -1),
+                }
+            self.opt_params[bm.get_name()] = {"conditions": conditions, "scaling": []}

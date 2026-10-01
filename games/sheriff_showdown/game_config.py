@@ -58,7 +58,7 @@ class GameConfig(Config):
                 "force_freegame": False,
             }
 
-        # Step 1 (grid, pays, strips): the paid modes that spin the reels. Buys arrive with the free spins.
+        # The paid modes that spin the reels, then the buys (each plays its bought bonus directly).
         self.bet_modes = []
         for name, mode in spec.BASE_MODES.items():
             self.bet_modes.append(
@@ -71,5 +71,28 @@ class GameConfig(Config):
                     is_feature=True,
                     is_buybonus=False,
                     distributions=[Distribution(criteria="basegame", quota=1, conditions=conditions(mode["strips"]))],
+                )
+            )
+        for name, mode in spec.BUY_MODES.items():
+            self.bet_modes.append(
+                BetMode(
+                    name=name,
+                    cost=mode["cost"],
+                    rtp=self.rtp,
+                    max_win=self.wincap,
+                    auto_close_disabled=False,
+                    is_feature=False,
+                    is_buybonus=True,
+                    distributions=[
+                        Distribution(
+                            criteria="freegame",
+                            quota=1,
+                            conditions={
+                                "reel_weights": {self.freegame_type: {mode["free_spins"]["strips"]: 1}},
+                                "force_wincap": False,
+                                "force_freegame": True,
+                            },
+                        )
+                    ],
                 )
             )

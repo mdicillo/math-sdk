@@ -87,3 +87,21 @@ Port status:
            5.812 (2.63 / 3.67 / 5.81); spins 10.24 / 15.30 / 20.30; medians 55 / 168 / 278 (56 / 168 / 276); kept on the
            first draw 0.525 / 0.278 / 0.999 (0.524 / 0.277 / 0.999). parity:sdk 0 differences on 70,000 books (1,614
            buy retriggers). Debug run, all 7 modes at 10,000: ~2 minutes.
+  Step 6a - the exact category model and the re-solve (published weights from the spec's exact probabilities, user
+           decision 2026-09-30). targets.py splits every mode into categories with exact probabilities: each paid
+           Showdown outcome; the Sharpshooter spin; the ordinary reel spin; per natural tier, each big X class of
+           the free-spins round (the largest X >= 25 among its Showdowns, from an exact forward dynamic program over
+           spins left / Showdowns / Sharpshooter seen with the guarantees conditioned on); buys: the big X classes
+           of the bought round. Reel-spin line means and Sharpshooter awards come from large samples of the
+           outline's vectorized engine (reference/, copied verbatim). The model put the frozen design at base
+           95.86%, WILD Ante 96.39%, SHOWDOWN Ante 95.96%, SHARPSHOOTER Ante ~95.6%; resolve.py re-solved the four
+           solved parameters (base and SHOWDOWN Ante Showdown rates in closed form, the WILD Ante ladder and
+           SHARPSHOOTER Ante multiplier tilts by importance reweighting), averaged over two independent full-size
+           solves (64M WILD Ante spins, 24M forced SHARPSHOOTER Ante Sharpshooters): base rate 0.0079878, SHOWDOWN
+           Ante 0.0978900, WILD tilt 0.142186, SHARPSHOOTER tilt 1.466316 (user decision 2026-09-30; written into
+           the outline's math_spec.json / .md, backup _backup_20260930, and the game repo's copy).
+           Model on the final spec (targets.json): base 95.996%, wild_ante 95.927%, showdown_ante 95.999%,
+           sharpshooter_ante 96.172% (its 2M-spin Sharpshooter sample is +/-0.14%), buys 95.998 / 96.006 / 95.968%.
+           The bonus program reproduces the spec: EV 51.995 / 192.07 / 431.96 / 96.006 / 288.05 / 479.98, kept on
+           the first draw 0.8425 / 0.7145 / 0.9989 / 0.5237 / 0.2781 / 0.9989, Showdowns and spins as section 12.
+           Run: PYTHONPATH=. python3 games/sheriff_showdown/targets.py (~15 min), resolve.py (~20 min).

@@ -1157,8 +1157,8 @@
    "cap": 50000
   },
   "rate_per_spin": {
-   "base": 0.007920763876843488,
-   "showdown_ante": 0.09782905388670562,
+   "base": 0.00798777652199039,
+   "showdown_ante": 0.09788999343595976,
    "fs_sheriff": 0.16666666666666666,
    "fs_posse": 0.25,
    "fs_showdown": 0.2857142857142857,
@@ -1745,34 +1745,34 @@
    "strips": "wild_ante",
    "natural_wild_multiplier_weights": {
     "1": 45.0,
-    "3": 35.260283721036515,
-    "5": 19.005550942659845,
-    "7": 5.325231692898313,
-    "9": 3.453576689133312,
-    "10": 2.8060028069441243,
-    "25": 1.60538207392906,
-    "50": 0.8888271548770512
+    "3": 35.07203609839624,
+    "5": 18.857089375698266,
+    "7": 5.274978328558123,
+    "9": 3.416799211353358,
+    "10": 2.7746965674196002,
+    "25": 1.5803991987692103,
+    "50": 0.872045019371243
    },
    "natural_wild_multiplier_probs": {
-    "1": 0.3970184616465533,
-    "3": 0.3110885244477094,
-    "5": 0.16767899106666695,
-    "7": 0.046982562102799094,
-    "9": 0.030469637873291208,
-    "10": 0.02475633150641926,
-    "25": 0.014163696029917083,
-    "50": 0.00784179532664377
+    "1": 0.39876632757521535,
+    "3": 0.31078993412317446,
+    "5": 0.16710160620232906,
+    "7": 0.046744083024843786,
+    "9": 0.030277877190517125,
+    "10": 0.024587901340565998,
+    "25": 0.014004666324355795,
+    "50": 0.007727604218998402
    },
-   "showdown_rate": 0.007920763876843488
+   "showdown_rate": 0.00798777652199039
   },
   "showdown": {
    "strips": "base",
-   "showdown_rate": 0.09782905388670562
+   "showdown_rate": 0.09788999343595976
   },
   "sharpshooter": {
    "cost_x_bet": 60.0,
    "strips": "base",
-   "showdown_rate": 0.007920763876843488,
+   "showdown_rate": 0.00798777652199039,
    "sharpshooter_rate": 0.2,
    "wild_count_weights": {
     "1": 1,
@@ -1783,26 +1783,26 @@
     "6": 1
    },
    "multiplier_weights": {
-    "3": 389.3693450429283,
-    "5": 147.59475572200193,
-    "7": 69.00194346671489,
-    "9": 49.83842434554863,
-    "10": 43.610560990906855,
-    "25": 44.457575340076374,
-    "50": 30.650905220725544,
-    "75": 27.74105287237528,
-    "100": 16.905609155036505
+    "3": 390.5756927642745,
+    "5": 148.2651402570411,
+    "7": 69.38105660993638,
+    "9": 50.14772247807132,
+    "10": 43.89422902374571,
+    "25": 44.86235064375525,
+    "50": 30.990400108001626,
+    "75": 28.080358464292473,
+    "100": 17.126251925235913
    },
    "multiplier_probs": {
-    "3": 0.47532168318334317,
-    "5": 0.18017593991915745,
-    "7": 0.0842339550585442,
-    "9": 0.0608401355903355,
-    "10": 0.05323748651163665,
-    "25": 0.05427147722316355,
-    "50": 0.03741701817589707,
-    "75": 0.03386482298220415,
-    "100": 0.020637481355718322
+    "3": 0.4743892698339428,
+    "5": 0.18008133360929507,
+    "7": 0.08426952674026145,
+    "9": 0.06090891443304753,
+    "10": 0.05331348479247513,
+    "25": 0.05448935548011662,
+    "50": 0.03764062523975215,
+    "75": 0.034106118213021425,
+    "100": 0.020801371658087885
    },
    "multiplier_design_weights": {
     "3": 78,
@@ -1815,11 +1815,11 @@
     "75": 0.05,
     "100": 0.02
    },
-   "multiplier_tilt": 1.463500414265033,
+   "multiplier_tilt": 1.4663161662458293,
    "placement": "in_run",
    "placement_rule": "Guaranteed wild as in the base game (section 6 step 2). Then, while fewer wilds than drawn are placed: draw the next wild's multiplier; its cell is chosen uniformly among the cells not showing W such that, after converting it, every Sharpshooter wild on the board lies inside the run of its line's best result (section 4; ties go to the first symbol in paytable order) on at least one paying line. No such cell: stop placing.",
    "presentation": "none - the award procedure's board is shown (every wild counts)",
-   "target_avg_award_x_bet": 286.81696711975593
+   "target_avg_award_x_bet": 286.8310196325866
   }
  },
  "frontend_contract": {
@@ -2170,5 +2170,6 @@
    "6": 0.166754,
    "7": 0.0
   }
- }
+ },
+ "resolve_2026_09_30": "Re-solved at large sample sizes for the Stake port (sheriff_showdown resolve.py): base Showdown rate, SHOWDOWN Ante Showdown rate, WILD Ante ladder tilt, SHARPSHOOTER Ante multiplier tilt, so every paid mode returns 96.00%. WILD Ante tilt 0.142186 (was 0.147058). Everything else unchanged."
 }

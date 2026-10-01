@@ -1,0 +1,63 @@
+{
+ "base_showdown_rate": 0.00798777652199039,
+ "showdown_ante_rate": 0.09788999343595976,
+ "wild_ante_tilt": 0.14218550123596788,
+ "sharpshooter_ante_tilt": 1.4663161662458293,
+ "sharpshooter_ante_target_award": 286.8310196325866,
+ "wild_ante_weights": {
+  "1": 45.0,
+  "3": 35.07203609839624,
+  "5": 18.857089375698266,
+  "7": 5.274978328558123,
+  "9": 3.416799211353358,
+  "10": 2.7746965674196002,
+  "25": 1.5803991987692103,
+  "50": 0.872045019371243
+ },
+ "sharpshooter_ante_weights": {
+  "3": 390.5756927642745,
+  "5": 148.2651402570411,
+  "7": 69.38105660993638,
+  "9": 50.14772247807132,
+  "10": 43.89422902374571,
+  "25": 44.86235064375525,
+  "50": 30.990400108001626,
+  "75": 28.080358464292473,
+  "100": 17.126251925235913
+ },
+ "runs": {
+  "run1": {
+   "base_showdown_rate": 0.007985937521654846,
+   "showdown_ante_rate": 0.09788832109708581,
+   "wild_ante_tilt": 0.1407591061534213,
+   "sharpshooter_ante_tilt": 1.4671716023774661,
+   "inputs": {
+    "a_base": 0.7894483479549523,
+    "showdown_ev": 22.14594551345067,
+    "wild_value_target": 2.7249047821140318,
+    "wild_spins": 32000000,
+    "wild_value_se": 0.0023029687872479073,
+    "sharp_ante_spins": 12000000,
+    "sharp_award_se": 0.1708599652819433,
+    "a_normal": 0.6492122699349516
+   }
+  },
+  "run2": {
+   "base_showdown_rate": 0.007989615522325934,
+   "showdown_ante_rate": 0.09789166577483371,
+   "wild_ante_tilt": 0.14361189631851445,
+   "sharpshooter_ante_tilt": 1.4654607301141924,
+   "inputs": {
+    "a_base": 0.7893691661115605,
+    "showdown_ev": 22.14594551345067,
+    "wild_value_target": 2.72483277621373,
+    "wild_spins": 32000000,
+    "wild_value_se": 0.0022954855725049674,
+    "sharp_ante_spins": 12000000,
+    "sharp_award_se": 0.17245537336405445,
+    "a_normal": 0.6489764384884091
+   }
+  }
+ },
+ "note": "Average of two independent full-size solves (run 1 sampled at the outline's values, run 2 at run 1's): 64M WILD Ante spins, 24M forced SHARPSHOOTER Ante Sharpshooters in all."
+}

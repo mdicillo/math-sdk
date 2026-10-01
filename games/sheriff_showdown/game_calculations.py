@@ -463,7 +463,9 @@ def draw_showdown(ctx: dict) -> dict:
 # --- One normal reel spin (sections 2, 4-7) ---------------------------------------------------------------------
 
 
-def play_reel_spin(strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, force_sharp: bool = None) -> dict:
+def play_reel_spin(
+    strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, force_sharp: bool = None, present: bool = True
+) -> dict:
     """One normal reel spin: the Sharpshooter trigger first (its chance for the strip set, or `sharp`'s own), then the
     stops (every reel scatter-free on a Sharpshooter spin), then the landed wilds' multipliers and the Sharpshooter
     itself. `force_sharp` pins whether it's a Sharpshooter spin (books whose criteria call for one)."""
@@ -471,7 +473,7 @@ def play_reel_spin(strip_id: str, floor: int = 0, ladder: dict = None, sharp: di
     is_sharp = (random.random() < rate) if force_sharp is None else force_sharp
     spin = spin_reels(STRIPS[strip_id], CLEAN_STOPS[strip_id], is_sharp)
     mults = natural_multipliers(spin["board"], floor, ladder)
-    shot = sharpshooter(spin["board"], mults, floor, True, sharp) if is_sharp else None
+    shot = sharpshooter(spin["board"], mults, floor, present, sharp) if is_sharp else None
     lines = evaluate_lines(shot["board"] if shot else spin["board"], shot["multipliers"] if shot else mults)
     scatter = scatter_result(spin["board"])
     win_x = scatter["payX"] + sum(line["payX"] for line in lines)
@@ -487,12 +489,25 @@ def play_reel_spin(strip_id: str, floor: int = 0, ladder: dict = None, sharp: di
     }
 
 
-def play_spin(ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None) -> dict:
+def play_spin(ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, present: bool = True) -> dict:
     """A paid spin (base / antes) or a free spin: a Showdown with the context's chance, else a normal reel spin."""
     if random.random() < ctx["rate"]:
         showdown = draw_showdown(ctx)
         return {"kind": "showdown", "showdown": showdown, "winX": showdown["awardX"]}
-    return {"kind": "reels", **play_reel_spin(strip_id, floor, ladder, sharp)}
+    return {"kind": "reels", **play_reel_spin(strip_id, floor, ladder, sharp, None, present)}
+
+
+def present_kept(result: dict, floor: int) -> None:
+    """Section 6 step 6 for a reel spin played with the presentation off: rebuild its Sharpshooter wilds in place (same
+    award, never a scatter on a Sharpshooter board, so nothing else about the spin changes)."""
+    shot = result.get("sharpshooter")
+    if not shot:
+        return
+    award = sum(line["payX"] for line in result["lines"])
+    shown = present_sharpshooter(result["spin"]["board"], result["multipliers"], award, floor, len(shot["wilds"]))
+    if shown:
+        result["sharpshooter"] = shown
+        result["lines"] = evaluate_lines(shown["board"], shown["multipliers"])
 
 
 # --- Free spins (section 10) ------------------------------------------------------------------------------------
@@ -508,7 +523,9 @@ def play_free_spins_once(mode: dict) -> dict:
     top = max(RETRIGGER_SPINS)
     while remaining > 0:
         remaining -= 1
-        result = play_spin(mode["showdown"], mode["strips"], mode["wild_floor"])
+        # The presentation runs only on the kept round (play_free_spins): it never changes an award, and a round
+        # redrawn for its guarantees would throw its work away.
+        result = play_spin(mode["showdown"], mode["strips"], mode["wild_floor"], present=False)
         total_x += result["winX"]
         added = 0
         if result["kind"] == "showdown":
@@ -533,7 +550,7 @@ def meets_guarantees(round_: dict) -> bool:
     return round_["showdowns"] >= mode["min_showdowns"] and (not mode["needs_sharpshooter"] or round_["sharpshooter"])
 
 
-def play_free_spins(mode: dict) -> dict:
+def play_free_spins(mode: dict, present: bool = True) -> dict:
     """Play a free-spins round, redrawing the whole round until it meets the mode's guarantees (no spin is ever
     forced, so guaranteed events land on random spins). `draws`: rounds played (1 = kept on the first draw)."""
     draws = 0
@@ -542,4 +559,8 @@ def play_free_spins(mode: dict) -> dict:
         round_ = play_free_spins_once(mode)
         if meets_guarantees(round_):
             round_["draws"] = draws
+            if present:
+                for spin in round_["spins"]:
+                    if spin["result"]["kind"] == "reels":
+                        present_kept(spin["result"], mode["wild_floor"])
             return round_

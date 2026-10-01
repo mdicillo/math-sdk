@@ -77,3 +77,13 @@ Port status:
            0.715 / 0.999). Trigger odds per reel spin 1 in 249 / 6,081 / 376,241 (exact = spec). Base RTP assembled
            from the port's parts 95.89% (spec parts with the sampled reel-spin value 95.91%; the spec's own split gives
            0.5497 per reel spin -> 96.00%). parity:sdk 0 differences on 40,000 books.
+  Step 5 - the buys: buy_sheriff 100x, buy_posse 300x, buy_showdown 500x play their bought bonus directly (bonusStart
+           first; no trigger spin, no scatter pay) on fs_buy_<tier> with its own Showdown odds, Sharpshooter chance and
+           guarantees (SHERIFF 2 Showdowns, POSSE a Showdown + a Sharpshooter, SHOWDOWN a Showdown). In every free-spins
+           round the Sharpshooter presentation now runs only on the kept round (play_free_spins -> present_kept): it
+           never changes an award, and rounds redrawn for their guarantees (POSSE buy keeps 28%) would waste it.
+           Verified against spec section 12 (per buy): return 95.76x +/- 0.90 (96.0), 286.49x +/- 1.55 (288.0),
+           477.80x +/- 1.85 (480.0); from reels 12.14 / 89.04 / 72.27 (12.2 / 88.9 / 72.3); Showdowns 2.628 / 3.669 /
+           5.812 (2.63 / 3.67 / 5.81); spins 10.24 / 15.30 / 20.30; medians 55 / 168 / 278 (56 / 168 / 276); kept on the
+           first draw 0.525 / 0.278 / 0.999 (0.524 / 0.277 / 0.999). parity:sdk 0 differences on 70,000 books (1,614
+           buy retriggers). Debug run, all 7 modes at 10,000: ~2 minutes.

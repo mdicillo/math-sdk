@@ -183,3 +183,7 @@ def natural_mode_for(scatters: int):
     if scatters == 3:
         return FREE_SPINS_MODES["sheriff"]
     return None
+
+# Buy modes (spec section 14.3): each plays its bought free-spins mode directly (no trigger spin, no scatter pay),
+# priced at the mode's buy price.
+BUY_MODES = {fid: {"cost": float(m["buy_price"]), "free_spins": m} for fid, m in FREE_SPINS_MODES.items() if m["source"] == "buy"}

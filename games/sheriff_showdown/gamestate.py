@@ -50,6 +50,13 @@ class GameState(GeneralGameState):
         self.repeat = True
         while self.repeat:
             self.reset_book()
+            if self.betmode in spec.BUY_MODES:
+                # A buy plays its bonus directly: no trigger spin, no scatter pay.
+                self.free_spins(spec.BUY_MODES[self.betmode]["free_spins"])
+                self.update_final_win()
+                final_win_event(self, self.total_units, self.capped)
+                self.check_repeat()
+                continue
             mode = spec.BASE_MODES[self.betmode]
             result = play_spin(mode["showdown"], mode["strips"], 0, mode.get("wild_multipliers"), mode.get("sharpshooter"))
             if result["kind"] == "showdown":
@@ -96,6 +103,7 @@ class GameState(GeneralGameState):
         """One free-spins round (natural or bought). The round is drawn whole - redrawn until it meets its guarantees -
         then emitted spin by spin, stopping at the max win (provider.ts BookBuilder.freeSpins)."""
         round_ = play_free_spins(mode)
+        self.triggered_freegame = True
         self.gametype = self.config.freegame_type
         bonus_start_event(self, mode)
         remaining = awarded = mode["spins"]

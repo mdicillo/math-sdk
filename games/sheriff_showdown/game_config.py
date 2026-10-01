@@ -9,6 +9,7 @@ from src.config.distributions import Distribution
 from src.config.betmode import BetMode
 
 import spec
+from categories import categories
 
 
 class GameConfig(Config):
@@ -51,12 +52,17 @@ class GameConfig(Config):
         self.padding_reels[self.basegame_type] = spec.STRIPS["base"]
         self.padding_reels[self.freegame_type] = spec.STRIPS["fs_sheriff"]
 
-        def conditions(strips):
-            return {
-                "reel_weights": {self.basegame_type: {strips: 1}},
-                "force_wincap": False,
-                "force_freegame": False,
-            }
+        def distributions(mode: str, strips: str) -> list:
+            """One distribution per published category (categories.py): a fixed number of books, each generated
+            inside its category (gamestate.run_spin); weights.py sets the published weights."""
+            return [
+                Distribution(
+                    criteria=c["name"],
+                    fixed_amt=c["books"],
+                    conditions={"reel_weights": {self.basegame_type: {strips: 1}}, "category": c},
+                )
+                for c in categories(mode)
+            ]
 
         # The paid modes that spin the reels, then the buys (each plays its bought bonus directly).
         self.bet_modes = []
@@ -70,7 +76,7 @@ class GameConfig(Config):
                     auto_close_disabled=False,
                     is_feature=True,
                     is_buybonus=False,
-                    distributions=[Distribution(criteria="basegame", quota=1, conditions=conditions(mode["strips"]))],
+                    distributions=distributions(name, mode["strips"]),
                 )
             )
         for name, mode in spec.BUY_MODES.items():
@@ -83,16 +89,6 @@ class GameConfig(Config):
                     auto_close_disabled=False,
                     is_feature=False,
                     is_buybonus=True,
-                    distributions=[
-                        Distribution(
-                            criteria="freegame",
-                            quota=1,
-                            conditions={
-                                "reel_weights": {self.freegame_type: {mode["free_spins"]["strips"]: 1}},
-                                "force_wincap": False,
-                                "force_freegame": True,
-                            },
-                        )
-                    ],
+                    distributions=distributions(name, mode["free_spins"]["strips"]),
                 )
             )

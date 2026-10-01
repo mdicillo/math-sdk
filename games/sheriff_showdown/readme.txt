@@ -105,3 +105,22 @@ Port status:
            The bonus program reproduces the spec: EV 51.995 / 192.07 / 431.96 / 96.006 / 288.05 / 479.98, kept on
            the first draw 0.8425 / 0.7145 / 0.9989 / 0.5237 / 0.2781 / 0.9989, Showdowns and spins as section 12.
            Run: PYTHONPATH=. python3 games/sheriff_showdown/targets.py (~15 min), resolve.py (~20 min).
+  Step 6b - books by category and the published weights. Every distribution is one category (categories.py, from
+           targets.json) with a fixed number of books, generated inside it from the game's own distribution:
+           a paid Showdown outcome (1 book each - its board and award are fixed); a Sharpshooter spin; an ordinary
+           reel spin (redrawn while it shows 3+ scatters); a bonus of a given big X class - a paid spin's stops
+           drawn among those showing exactly the tier's scatters (game_calculations.stops_with_scatters), or a
+           buy - with the free-spins round played with its Showdowns' outcomes undrawn, redrawn for its
+           guarantees, accepted with probability P(class | n Showdowns) / max and given outcomes from their exact
+           conditional distribution (play_free_spins_class). Seeds differ by mode (modes sharing strips no longer
+           repeat each other's books). weights.py replaces the optimizer: each category gets exactly its probability,
+           and inside it the least change from equal weights (w ~ exp(lambda x payout)) that hits its target
+           average; integer weights summing to 2^50. Each mode's remaining model gap to 96.00% goes into the
+           categories whose averages are sample estimates (categories.ABSORB): base / SHOWDOWN Ante ordinary
+           spins, WILD Ante ordinary spins + Sharpshooter, SHARPSHOOTER Ante Sharpshooter (target 286.83x, the
+           re-solved award), the buys' "none" class.
+           Verified at 10,000 books a mode: every published table 96.00000%; Showdown, X, Sharpshooter and natural
+           trigger frequencies equal the exact model to every printed digit in all four paid modes; 50,000x 1 in
+           3.68M base, 1 in 8,779 / 8,620 / 3,185 buys (spec 8,778 / 8,620 / 3,185); events per book 17.8 paid,
+           30.9 / 45.1 / 57.2 buys (<= 5.7M a mode at 100,000 books, under Stake's 10M); parity:sdk 0 differences on
+           70,000 books. Debug run ~9 minutes.

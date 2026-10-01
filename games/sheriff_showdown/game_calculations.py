@@ -3,6 +3,7 @@
 src/rgs/sheriff/engine.ts (itself a port of the outline's engine.py); the names follow it.
 """
 
+import math
 import random
 
 from spec import (
@@ -70,6 +71,36 @@ def spin_reels(strips: list, clean: list, sharp: bool = False) -> dict:
     """Every reel's stop drawn uniformly: from its scatter-free stops on a Sharpshooter spin (`sharp`), else from all."""
     stops = [random.choice(clean[reel]) if sharp else random.randrange(len(strips[reel])) for reel in range(REELS)]
     return read_stops(strips, stops)
+
+
+_SCATTER_SUBSETS = {}
+
+
+def stops_with_scatters(strip_id: str, k: int) -> list:
+    """Stops drawn uniformly among those that show exactly k scatters (at most one per reel window): which reels
+    show one is drawn with its exact probability, then each reel's stop uniformly among its stops of that kind."""
+    key = (strip_id, k)
+    if key not in _SCATTER_SUBSETS:
+        strips = STRIPS[strip_id]
+        with_s, without = [], []
+        for strip in strips:
+            n = len(strip)
+            shows = [any(strip[(stop + row) % n] == SCATTER for row in range(ROWS)) for stop in range(n)]
+            with_s.append([stop for stop in range(n) if shows[stop]])
+            without.append([stop for stop in range(n) if not shows[stop]])
+        subsets = {}
+        for mask in range(1 << REELS):
+            bits = [(mask >> r) & 1 for r in range(REELS)]
+            if sum(bits) != k:
+                continue
+            w = 1.0
+            for r, b in enumerate(bits):
+                w *= len(with_s[r]) / len(strips[r]) if b else len(without[r]) / len(strips[r])
+            subsets[tuple(bits)] = w
+        _SCATTER_SUBSETS[key] = (subsets, with_s, without)
+    subsets, with_s, without = _SCATTER_SUBSETS[key]
+    bits = draw(subsets)
+    return [random.choice(with_s[r] if b else without[r]) for r, b in enumerate(bits)]
 
 
 # --- Line evaluation (section 4) --------------------------------------------------------------------------------
@@ -464,14 +495,21 @@ def draw_showdown(ctx: dict) -> dict:
 
 
 def play_reel_spin(
-    strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, force_sharp: bool = None, present: bool = True
+    strip_id: str,
+    floor: int = 0,
+    ladder: dict = None,
+    sharp: dict = None,
+    force_sharp: bool = None,
+    present: bool = True,
+    stops: list = None,
 ) -> dict:
     """One normal reel spin: the Sharpshooter trigger first (its chance for the strip set, or `sharp`'s own), then the
     stops (every reel scatter-free on a Sharpshooter spin), then the landed wilds' multipliers and the Sharpshooter
-    itself. `force_sharp` pins whether it's a Sharpshooter spin (books whose criteria call for one)."""
+    itself. `force_sharp` pins whether it's a Sharpshooter spin and `stops` the stops (books whose category calls for
+    one: stops must suit it - scatter-free on a Sharpshooter spin)."""
     rate = sharp["rate"] if sharp else SHARPSHOOTER_RATE[strip_id]
     is_sharp = (random.random() < rate) if force_sharp is None else force_sharp
-    spin = spin_reels(STRIPS[strip_id], CLEAN_STOPS[strip_id], is_sharp)
+    spin = read_stops(STRIPS[strip_id], stops) if stops else spin_reels(STRIPS[strip_id], CLEAN_STOPS[strip_id], is_sharp)
     mults = natural_multipliers(spin["board"], floor, ladder)
     shot = sharpshooter(spin["board"], mults, floor, present, sharp) if is_sharp else None
     lines = evaluate_lines(shot["board"] if shot else spin["board"], shot["multipliers"] if shot else mults)
@@ -489,9 +527,14 @@ def play_reel_spin(
     }
 
 
-def play_spin(ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, present: bool = True) -> dict:
-    """A paid spin (base / antes) or a free spin: a Showdown with the context's chance, else a normal reel spin."""
+def play_spin(
+    ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None, present: bool = True, outcome: bool = True
+) -> dict:
+    """A paid spin (base / antes) or a free spin: a Showdown with the context's chance, else a normal reel spin.
+    `outcome=False` leaves a Showdown's outcome undrawn (None) for the caller to assign."""
     if random.random() < ctx["rate"]:
+        if not outcome:
+            return {"kind": "showdown", "showdown": None, "winX": 0}
         showdown = draw_showdown(ctx)
         return {"kind": "showdown", "showdown": showdown, "winX": showdown["awardX"]}
     return {"kind": "reels", **play_reel_spin(strip_id, floor, ladder, sharp, None, present)}
@@ -513,7 +556,7 @@ def present_kept(result: dict, floor: int) -> None:
 # --- Free spins (section 10) ------------------------------------------------------------------------------------
 
 
-def play_free_spins_once(mode: dict) -> dict:
+def play_free_spins_once(mode: dict, outcomes: bool = True) -> dict:
     """One free-spins round as played: each spin a Showdown with the mode's chance, else a reel spin on its strips with
     its wild floor (and the shared Sharpshooter at the strips' chance); 3 / 4 / 5+ scatters add 5 / 10 / 15 spins
     (uncapped unless RETRIGGER_CAP is set)."""
@@ -525,7 +568,7 @@ def play_free_spins_once(mode: dict) -> dict:
         remaining -= 1
         # The presentation runs only on the kept round (play_free_spins): it never changes an award, and a round
         # redrawn for its guarantees would throw its work away.
-        result = play_spin(mode["showdown"], mode["strips"], mode["wild_floor"], present=False)
+        result = play_spin(mode["showdown"], mode["strips"], mode["wild_floor"], present=False, outcome=outcomes)
         total_x += result["winX"]
         added = 0
         if result["kind"] == "showdown":
@@ -564,3 +607,114 @@ def play_free_spins(mode: dict, present: bool = True) -> dict:
                     if spin["result"]["kind"] == "reels":
                         present_kept(spin["result"], mode["wild_floor"])
             return round_
+
+
+# --- Showdown outcomes by label and by big X class (the published categories, targets.py) -----------------------
+
+# Big X classes, smallest first ("none": VS / + / X10 only). Must match targets.X_CLASSES.
+X_CLASSES = ["none", "25", "50", "100", "250", "500", "1000", "5000"]
+
+
+def outcome_table(ctx: dict) -> list:
+    """Every outcome of one Showdown draw in a context: (label, probability, big X class), as targets.py lists them."""
+    out = []
+    tables = NUMBER_TABLES[ctx["table"]]
+    mods = ctx["modifiers"]
+    total_mod = sum(mods.values())
+    cw = sum(CHALLENGER_WEIGHTS.values())
+    for cid, w in CHALLENGER_WEIGHTS.items():
+        pc = mods["VS"] / total_mod * w / cw
+        out.append((f"VS_{cid}_sheriff", pc * SHERIFF_WIN_CHANCE, "none"))
+        out.append((f"VS_{cid}_challenger", pc * (1 - SHERIFF_WIN_CHANCE), "none"))
+    for mod in ("PLUS", "X"):
+        table = tables[mod]
+        tw = sum(table.values())
+        for num, w in table.items():
+            cls = str(num) if mod == "X" and str(num) in X_CLASSES else "none"
+            out.append((f"{mod}_{num}", mods[mod] / total_mod * w / tw, cls))
+    return out
+
+
+def showdown_from_label(label: str) -> dict:
+    """The Showdown result for an outcome label (VS_<ID>_<winner>, PLUS_<n>, X_<n>), as draw_showdown builds it."""
+    parts = label.split("_")
+    if parts[0] == "VS":
+        cid, winner = parts[1], parts[2]
+        value = CHALLENGERS[cid]
+        award_x = SHERIFF_VALUE + value if winner == "sheriff" else value
+        return {
+            "modifier": "VS",
+            "challenger": {"id": cid, "value": value},
+            "winner": winner,
+            "awardX": min(award_x, int(WINCAP_X)),
+            "board": showdown_board("VS", cid),
+        }
+    modifier, number = parts[0], int(parts[1])
+    award_x = SHERIFF_VALUE + number if modifier == "PLUS" else SHERIFF_VALUE * number
+    return {"modifier": modifier, "number": number, "awardX": min(award_x, int(WINCAP_X)), "board": showdown_board(modifier, f"N{number}")}
+
+
+_CLASS_CACHE = {}
+
+
+def _class_model(mode: dict, cls: str) -> dict:
+    """Per (free-spins mode, class): the outcome weights below / within the class, and the acceptance curve
+    P(round's class = cls | n Showdowns) / its max over n."""
+    key = (mode["id"], cls)
+    if key not in _CLASS_CACHE:
+        outs = outcome_table(mode["showdown"])
+        i = X_CLASSES.index(cls)
+        below = {lab: p for lab, p, c in outs if X_CLASSES.index(c) < i}
+        within = {lab: p for lab, p, c in outs if c == cls}
+        q_c = sum(within.values())
+        f_prev = sum(below.values())
+        f_c = f_prev + q_c
+
+        def p_n(n: int) -> float:
+            return f_c**n - (f_prev**n if i else 0.0)
+
+        p_max = max(p_n(n) for n in range(401))
+        _CLASS_CACHE[key] = {"i": i, "below": below, "within": within, "q": q_c, "f_prev": f_prev, "p_n": p_n, "p_max": p_max}
+    return _CLASS_CACHE[key]
+
+
+def assign_outcomes(model: dict, n: int) -> list:
+    """Labels for a round's n Showdowns, drawn from their exact distribution given that the round's big X class is
+    the model's class: "none" - every outcome below X25; else j >= 1 outcomes of the class (j drawn with its exact
+    conditional probability), on random Showdowns, the rest below it."""
+    if model["i"] == 0:
+        return [draw(model["within"]) for _ in range(n)]
+    q, f = model["q"], model["f_prev"]
+    pj = {j: math.comb(n, j) * q**j * f ** (n - j) for j in range(1, n + 1)}
+    j = draw(pj)
+    picks = set(random.sample(range(n), j))
+    return [draw(model["within"]) if k in picks else draw(model["below"]) for k in range(n)]
+
+
+def play_free_spins_class(mode: dict, cls: str, present: bool = True) -> dict:
+    """A free-spins round drawn from its exact distribution given its big X class (targets.py): the round is played
+    with its Showdowns' outcomes undrawn (they never affect the rest of the round), redrawn until it meets its
+    guarantees, accepted with probability P(class | n Showdowns) / max, and then given outcomes from their exact
+    conditional distribution."""
+    model = _class_model(mode, cls)
+    draws = 0
+    while True:
+        draws += 1
+        round_ = play_free_spins_once(mode, outcomes=False)
+        if not meets_guarantees(round_):
+            continue
+        if random.random() * model["p_max"] >= model["p_n"](round_["showdowns"]):
+            continue
+        labels = iter(assign_outcomes(model, round_["showdowns"]))
+        for spin in round_["spins"]:
+            result = spin["result"]
+            if result["kind"] == "showdown":
+                result["showdown"] = showdown_from_label(next(labels))
+                result["winX"] = result["showdown"]["awardX"]
+        round_["totalX"] = sum(spin["result"]["winX"] for spin in round_["spins"])
+        round_["draws"] = draws
+        if present:
+            for spin in round_["spins"]:
+                if spin["result"]["kind"] == "reels":
+                    present_kept(spin["result"], mode["wild_floor"])
+        return round_

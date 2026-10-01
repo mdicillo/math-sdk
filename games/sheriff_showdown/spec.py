@@ -84,3 +84,31 @@ BASE_MODES = {
         "strips": SPEC["antes"]["sharpshooter"]["strips"],
     },
 }
+
+
+def num_table(obj: dict) -> dict:
+    """A JSON weight table {"3": w, ...} as {3: w, ...}."""
+    return {int(k): w for k, w in obj.items()}
+
+
+# Sharpshooter (section 6): the chance per normal reel spin by strip set, and the shared content.
+SHARPSHOOTER_RATE = SPEC["sharpshooter"]["rate_per_spin"]
+SHARPSHOOTER_WILD_COUNT = num_table(SPEC["sharpshooter"]["wild_count_weights"])
+SHARPSHOOTER_MULTIPLIERS = num_table(SPEC["sharpshooter"]["multiplier_weights"])
+# Presentation (section 6 step 6): most wilds shown, and the two-line union sample size.
+SHARPSHOOTER_PRESENT_MAX_WILDS = SPEC["sharpshooter"]["presentation"]["max_wilds"]
+SHARPSHOOTER_PRESENT_PAIR_SAMPLE = SPEC["sharpshooter"]["presentation"]["pair_sample"]
+
+_SHARP_ANTE = SPEC["antes"]["sharpshooter"]
+
+# Per reel-spin mode: the natural-wild multiplier ladder (WILD Ante) and the mode's own Sharpshooter content
+# (SHARPSHOOTER Ante: its chance, wild counts, multipliers, and in-run placement with no step 6 rebuild).
+BASE_MODES["wild_ante"]["wild_multipliers"] = num_table(SPEC["antes"]["wild"]["natural_wild_multiplier_weights"])
+BASE_MODES["sharpshooter_ante"]["sharpshooter"] = {
+    "rate": _SHARP_ANTE["sharpshooter_rate"],
+    "wild_count": num_table(_SHARP_ANTE["wild_count_weights"]),
+    "multipliers": num_table(_SHARP_ANTE["multiplier_weights"]),
+    "in_run": _SHARP_ANTE["placement"] == "in_run",
+}
+for _strip_id in STRIP_SET_IDS:
+    assert 0 <= SHARPSHOOTER_RATE[_strip_id] < 1, f"no Sharpshooter chance for {_strip_id}"

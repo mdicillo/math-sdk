@@ -36,6 +36,21 @@ def reveal_event(gamestate, result: dict) -> None:
     )
 
 
+def sharpshooter_event(gamestate, shot: dict) -> None:
+    """After reveal, before winInfo, when the Sharpshooter triggers: the wilds shown (each with the symbol it replaced
+    and its multiplier), the guaranteed cells, and the board and multipliers after conversion."""
+    add_event(
+        gamestate,
+        {
+            "type": "sharpshooter",
+            "wilds": shot["wilds"],
+            "guaranteed": shot["guaranteed"],
+            "board": shot["board"],
+            "multipliers": shot["multipliers"],
+        },
+    )
+
+
 def win_info_event(gamestate, result: dict, paid: int) -> None:
     """After every normal reel spin, even with no win. `paid` (book units) is what the spin added to the round."""
     wins = [

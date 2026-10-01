@@ -1,0 +1,2174 @@
+{
+ "game": "Sheriff Showdown",
+ "grid": {
+  "reels": 5,
+  "rows": 5,
+  "center_cell": {
+   "reel": 3,
+   "row": 3
+  }
+ },
+ "rtp_target": 0.96,
+ "max_win_x_bet": 50000,
+ "symbols": {
+  "H1": "Sheriff Star Badge",
+  "H2": "Guns",
+  "H3": "Bullets",
+  "M1": "Bottle",
+  "M2": "Rope",
+  "M3": "Gloves",
+  "M4": "Stirrups",
+  "L5": "10",
+  "L4": "J",
+  "L3": "Q",
+  "L2": "K",
+  "L1": "A",
+  "W": "Wild",
+  "S": "Scatter"
+ },
+ "paylines": {
+  "count": 10,
+  "rows_top_is_0": [
+   [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   [
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   [
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   [
+    0,
+    1,
+    2,
+    1,
+    0
+   ],
+   [
+    4,
+    3,
+    2,
+    3,
+    4
+   ],
+   [
+    1,
+    2,
+    3,
+    2,
+    1
+   ],
+   [
+    3,
+    2,
+    1,
+    2,
+    3
+   ],
+   [
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  ]
+ },
+ "paytable_x_total_bet": {
+  "H1": {
+   "3": 5,
+   "4": 15,
+   "5": 40
+  },
+  "H2": {
+   "3": 4,
+   "4": 10,
+   "5": 25
+  },
+  "H3": {
+   "3": 3,
+   "4": 8,
+   "5": 20
+  },
+  "M1": {
+   "3": 2,
+   "4": 5,
+   "5": 12
+  },
+  "M2": {
+   "3": 2,
+   "4": 5,
+   "5": 12
+  },
+  "M3": {
+   "3": 2,
+   "4": 4,
+   "5": 10
+  },
+  "M4": {
+   "3": 2,
+   "4": 4,
+   "5": 10
+  },
+  "L1": {
+   "3": 2,
+   "4": 3,
+   "5": 6
+  },
+  "L2": {
+   "3": 2,
+   "4": 3,
+   "5": 6
+  },
+  "L3": {
+   "3": 1,
+   "4": 2,
+   "5": 5
+  },
+  "L4": {
+   "3": 1,
+   "4": 2,
+   "5": 5
+  },
+  "L5": {
+   "3": 0.5,
+   "4": 2,
+   "5": 5
+  }
+ },
+ "scatter_pays_x_total_bet": {
+  "3": 2.0,
+  "4": 10.0,
+  "5": 50.0
+ },
+ "reel_strips": {
+  "note": "Uniform random stop per reel; visible window = 5 consecutive positions from the stop, wrapping. Exact strips in output/strips/*.csv (and results.json 'strips').",
+  "sets": {
+   "base": "base.csv",
+   "wild_ante": "wild_ante.csv",
+   "fs_sheriff": "fs_sheriff.csv",
+   "fs_posse": "fs_posse.csv",
+   "fs_showdown": "fs_showdown.csv",
+   "fs_buy_sheriff": "fs_buy_sheriff.csv",
+   "fs_buy_posse": "fs_buy_posse.csv",
+   "fs_buy_showdown": "fs_buy_showdown.csv"
+  },
+  "symbol_copies_per_reel": {
+   "base": {
+    "H1": [
+     20,
+     20,
+     8,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L4": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L3": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     30,
+     30,
+     30,
+     30
+    ]
+   },
+   "wild_ante": {
+    "H1": [
+     20,
+     20,
+     8,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     70,
+     70,
+     70,
+     70
+    ],
+    "L4": [
+     80,
+     75,
+     75,
+     75,
+     75
+    ],
+    "L3": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     45,
+     45,
+     45,
+     45
+    ]
+   },
+   "fs_sheriff": {
+    "H1": [
+     20,
+     20,
+     18,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L4": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L3": [
+     80,
+     80,
+     70,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     30,
+     30,
+     30,
+     30
+    ]
+   },
+   "fs_posse": {
+    "H1": [
+     20,
+     20,
+     68,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L4": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L3": [
+     80,
+     80,
+     50,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     50,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     30,
+     30,
+     30,
+     30
+    ]
+   },
+   "fs_showdown": {
+    "H1": [
+     20,
+     20,
+     18,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L4": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L3": [
+     80,
+     80,
+     70,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     30,
+     30,
+     30,
+     30
+    ]
+   },
+   "fs_buy_sheriff": {
+    "H1": [
+     20,
+     20,
+     48,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     70,
+     70,
+     70,
+     70
+    ],
+    "L4": [
+     80,
+     70,
+     70,
+     70,
+     70
+    ],
+    "L3": [
+     80,
+     80,
+     60,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     60,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     50,
+     50,
+     50,
+     50
+    ]
+   },
+   "fs_buy_posse": {
+    "H1": [
+     20,
+     20,
+     18,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     60,
+     60,
+     60,
+     60
+    ],
+    "L4": [
+     80,
+     70,
+     70,
+     70,
+     70
+    ],
+    "L3": [
+     80,
+     80,
+     70,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     60,
+     60,
+     60,
+     60
+    ]
+   },
+   "fs_buy_showdown": {
+    "H1": [
+     20,
+     20,
+     28,
+     20,
+     20
+    ],
+    "H2": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "H3": [
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "M1": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M2": [
+     30,
+     30,
+     30,
+     30,
+     30
+    ],
+    "M3": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "M4": [
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "L5": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L4": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "L3": [
+     80,
+     80,
+     70,
+     80,
+     80
+    ],
+    "L2": [
+     80,
+     80,
+     70,
+     80,
+     80
+    ],
+    "L1": [
+     80,
+     80,
+     80,
+     80,
+     80
+    ],
+    "W": [
+     0,
+     30,
+     30,
+     30,
+     30
+    ]
+   }
+  },
+  "scatters_per_reel": [
+   13,
+   8,
+   8,
+   8,
+   13
+  ],
+  "lengths": {
+   "base": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "wild_ante": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_sheriff": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_posse": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_showdown": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_buy_sheriff": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_buy_posse": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ],
+   "fs_buy_showdown": [
+    613,
+    638,
+    626,
+    638,
+    643
+   ]
+  },
+  "sharpshooter_scatter_exclusion": "The Sharpshooter trigger is drawn first (sharpshooter.rate_per_spin). On a Sharpshooter spin every reel is drawn uniformly from its scatter-free stops, so it never shows a scatter; otherwise every reel is drawn uniformly from all stops. No symbol is ever overwritten."
+ },
+ "anticipation": {
+  "levels": {
+   "heavy": "At least 3 scatters visible on the reels to the left",
+   "light": "At least 2 scatters visible on the reels to the left (and not heavy): every reel after the 2nd scatter anticipates"
+  },
+  "display_strips": {
+   "light": {
+    "base": "anticipation_light_base.csv",
+    "wild_ante": "anticipation_light_wild_ante.csv",
+    "fs_sheriff": "anticipation_light_fs_sheriff.csv",
+    "fs_posse": "anticipation_light_fs_posse.csv",
+    "fs_showdown": "anticipation_light_fs_showdown.csv",
+    "fs_buy_sheriff": "anticipation_light_fs_buy_sheriff.csv",
+    "fs_buy_posse": "anticipation_light_fs_buy_posse.csv",
+    "fs_buy_showdown": "anticipation_light_fs_buy_showdown.csv"
+   },
+   "heavy": {
+    "base": "anticipation_heavy_base.csv",
+    "wild_ante": "anticipation_heavy_wild_ante.csv",
+    "fs_sheriff": "anticipation_heavy_fs_sheriff.csv",
+    "fs_posse": "anticipation_heavy_fs_posse.csv",
+    "fs_showdown": "anticipation_heavy_fs_showdown.csv",
+    "fs_buy_sheriff": "anticipation_heavy_fs_buy_sheriff.csv",
+    "fs_buy_posse": "anticipation_heavy_fs_buy_posse.csv",
+    "fs_buy_showdown": "anticipation_heavy_fs_buy_showdown.csv"
+   }
+  },
+  "display_strip_spacing": {
+   "light": 8,
+   "heavy": 5
+  },
+  "display_strip_rule": "Reel's own symbols in strip order with a scatter every N positions (reels 3-5). Presentation only; the landed board and its off-screen rows come from the real strip.",
+  "stats_base": {
+   "P_light": [
+    0.0,
+    0.0,
+    0.0065685,
+    0.01599125,
+    0.0273105
+   ],
+   "P_heavy": [
+    0.0,
+    0.0,
+    0.0,
+    0.00043075,
+    0.001409
+   ],
+   "P_any": 0.0287195,
+   "P_heavy_any": 0.001409,
+   "P_trigger_given_any": 0.14496248193735964,
+   "P_land_given_flag": [
+    0.0,
+    0.0,
+    0.06557813808327624,
+    0.06119839240043844,
+    0.10053273907971935
+   ],
+   "P_padding_scatter_given_flag_miss": [
+    0.0,
+    0.0,
+    0.026801352287075884,
+    0.026480508529545307,
+    0.045679334939852316
+   ],
+   "P_line_4oak_broken_on_reel5": 0.02964275
+  }
+ },
+ "sharpshooter": {
+  "trigger": "At random on a normal reel spin (base, antes, free spins), with the context's chance per spin (rate_per_spin); drawn before the stops. Formerly Deputized (H1 in the center cell); the rates keep those odds.",
+  "rate_per_spin": {
+   "base": 0.012779552715654952,
+   "wild_ante": 0.012779552715654952,
+   "fs_sheriff": 0.02875399361022364,
+   "fs_posse": 0.10862619808306709,
+   "fs_showdown": 0.02875399361022364,
+   "fs_buy_sheriff": 0.07667731629392971,
+   "fs_buy_posse": 0.02875399361022364,
+   "fs_buy_showdown": 0.04472843450479233,
+   "sharpshooter_ante": 0.2
+  },
+  "guaranteed_win": "The first wild goes on a random cell of reels 1-3 whose conversion to W makes a line through that cell pay. If no such cell exists, the reel 1 and reel 2 cells of a random line (any of the 10) are converted, skipping cells already W or showing that line's reel 3 symbol, so that symbol pays at least 3 of a kind. Remaining wilds (drawn count minus wilds already placed, if positive) go on random free cells.",
+  "wild_count_weights": {
+   "1": 62.9056,
+   "2": 21.3169,
+   "3": 10.66,
+   "4": 5.1175
+  },
+  "wild_count_weights_note": "Solved: the design weights {1: 85, 2: 12, 3: 2.5, 4: 0.5} x exp(t (k - 1)), t = 0.8756, so the base-game award per Sharpshooter averages 11.6303x.",
+  "multiplier_weights": {
+   "3": 78,
+   "5": 14,
+   "7": 4,
+   "9": 2,
+   "10": 1.5,
+   "25": 0.4,
+   "50": 0.1
+  },
+  "eligible_cells": "Any of the 25 cells (a Sharpshooter spin never shows a scatter); chosen uniformly without replacement",
+  "multiplier_rule": "Each converted cell becomes W with its own multiplier; per line, multipliers of wilds in the winning run ADD; line pay x sum",
+  "presentation": {
+   "rule": "Outcome-first: steps 1-5 decide the award (the spin's line total). The wilds shown are then rebuilt to display exactly that award with the most wilds, up to max_wilds: every shown wild lies inside a winning run and carries a multiplier from multiplier_weights' values raised to the wild floor; landed wilds keep their multipliers; the board's line total equals the award. Used only when it shows more wilds than steps 1-5 placed. Reference: engine.sharpshooter_presentation.",
+   "max_wilds": 5,
+   "pair_sample": 150,
+   "candidate_sets": "Per line, paying symbol s and run length n (3-5): the run cells showing neither s nor W convert, and any run cells showing s may convert too; plus unions of two such sets from a random sample of 150. Searched from the most wilds down, in random order; multipliers chosen at random among the exact solutions."
+  }
+ },
+ "showdown": {
+  "sheriff_value": 10,
+  "sheriff_win_chance_vs": 0.75,
+  "characters": {
+   "Bandit": {
+    "value": 6,
+    "weight": 30
+   },
+   "Robber": {
+    "value": 8,
+    "weight": 25
+   },
+   "Cowboy": {
+    "value": 10,
+    "weight": 18
+   },
+   "Outlaw": {
+    "value": 12,
+    "weight": 12
+   },
+   "Rancher": {
+    "value": 15,
+    "weight": 8
+   },
+   "Baron": {
+    "value": 20,
+    "weight": 5
+   },
+   "Villain": {
+    "value": 30,
+    "weight": 2
+   }
+  },
+  "numbers": [
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   25,
+   50,
+   100,
+   250,
+   500,
+   1000,
+   5000
+  ],
+  "payout_rules": {
+   "VS_sheriff_wins": "10 + challenger value",
+   "VS_challenger_wins": "challenger value",
+   "+": "10 + number",
+   "X": "10 x number",
+   "cap": 50000
+  },
+  "rate_per_spin": {
+   "base": 0.007920763876843488,
+   "showdown_ante": 0.09782905388670562,
+   "fs_sheriff": 0.16666666666666666,
+   "fs_posse": 0.25,
+   "fs_showdown": 0.2857142857142857,
+   "fs_buy_sheriff": 0.16666666666666666,
+   "fs_buy_posse": 0.25,
+   "fs_buy_showdown": 0.2857142857142857
+  },
+  "modifier_probs_VS_plus_X": {
+   "base": [
+    0.7,
+    0.275,
+    0.025
+   ],
+   "sheriff": [
+    0.8233756308228269,
+    0.15,
+    0.02662436917717304
+   ],
+   "posse": [
+    0.7422309384331336,
+    0.2,
+    0.05776906156686646
+   ],
+   "showdown": [
+    0.5430905549828461,
+    0.3,
+    0.15690944501715384
+   ],
+   "buy_sheriff": [
+    0.6813547344932244,
+    0.25,
+    0.06864526550677562
+   ],
+   "buy_posse": [
+    0.6888003882477841,
+    0.2,
+    0.1111996117522159
+   ],
+   "buy_showdown": [
+    0.5208202624151443,
+    0.3,
+    0.17917973758485561
+   ]
+  },
+  "number_table_used": {
+   "base": "base",
+   "sheriff": "base",
+   "posse": "posse",
+   "showdown": "top",
+   "buy_sheriff": "base",
+   "buy_posse": "posse",
+   "buy_showdown": "top"
+  },
+  "number_tables": {
+   "base": {
+    "plus": {
+     "3": {
+      "weight": 30,
+      "prob": 0.3
+     },
+     "4": {
+      "weight": 25,
+      "prob": 0.25
+     },
+     "5": {
+      "weight": 18,
+      "prob": 0.18
+     },
+     "6": {
+      "weight": 12,
+      "prob": 0.12
+     },
+     "7": {
+      "weight": 8,
+      "prob": 0.08
+     },
+     "8": {
+      "weight": 5,
+      "prob": 0.05
+     },
+     "9": {
+      "weight": 2,
+      "prob": 0.02
+     },
+     "10": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "25": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "50": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "100": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "250": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "500": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "1000": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5000": {
+      "weight": 0,
+      "prob": 0.0
+     }
+    },
+    "x": {
+     "3": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "4": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "6": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "7": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "8": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "9": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "10": {
+      "weight": 700,
+      "prob": 0.6983011813003365
+     },
+     "25": {
+      "weight": 200,
+      "prob": 0.19951462322866756
+     },
+     "50": {
+      "weight": 70,
+      "prob": 0.06983011813003365
+     },
+     "100": {
+      "weight": 25,
+      "prob": 0.024939327903583445
+     },
+     "250": {
+      "weight": 4,
+      "prob": 0.003990292464573351
+     },
+     "500": {
+      "weight": 2,
+      "prob": 0.0019951462322866753
+     },
+     "1000": {
+      "weight": 0.8,
+      "prob": 0.0007980584929146703
+     },
+     "5000": {
+      "weight": 0.6327879504659255,
+      "prob": 0.0006312522476042494
+     }
+    }
+   },
+   "posse": {
+    "plus": {
+     "3": {
+      "weight": 30,
+      "prob": 0.3
+     },
+     "4": {
+      "weight": 25,
+      "prob": 0.25
+     },
+     "5": {
+      "weight": 18,
+      "prob": 0.18
+     },
+     "6": {
+      "weight": 12,
+      "prob": 0.12
+     },
+     "7": {
+      "weight": 8,
+      "prob": 0.08
+     },
+     "8": {
+      "weight": 5,
+      "prob": 0.05
+     },
+     "9": {
+      "weight": 2,
+      "prob": 0.02
+     },
+     "10": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "25": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "50": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "100": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "250": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "500": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "1000": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5000": {
+      "weight": 0,
+      "prob": 0.0
+     }
+    },
+    "x": {
+     "3": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "4": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "6": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "7": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "8": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "9": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "10": {
+      "weight": 800,
+      "prob": 0.7584376185058779
+     },
+     "25": {
+      "weight": 115,
+      "prob": 0.10902540766021995
+     },
+     "50": {
+      "weight": 30,
+      "prob": 0.028441410693970423
+     },
+     "100": {
+      "weight": 60,
+      "prob": 0.056882821387940846
+     },
+     "250": {
+      "weight": 34,
+      "prob": 0.03223359878649981
+     },
+     "500": {
+      "weight": 13,
+      "prob": 0.012324611300720515
+     },
+     "1000": {
+      "weight": 2.5,
+      "prob": 0.0023701175578308684
+     },
+     "5000": {
+      "weight": 0.3,
+      "prob": 0.0002844141069397042
+     }
+    }
+   },
+   "top": {
+    "plus": {
+     "3": {
+      "weight": 30,
+      "prob": 0.3
+     },
+     "4": {
+      "weight": 25,
+      "prob": 0.25
+     },
+     "5": {
+      "weight": 18,
+      "prob": 0.18
+     },
+     "6": {
+      "weight": 12,
+      "prob": 0.12
+     },
+     "7": {
+      "weight": 8,
+      "prob": 0.08
+     },
+     "8": {
+      "weight": 5,
+      "prob": 0.05
+     },
+     "9": {
+      "weight": 2,
+      "prob": 0.02
+     },
+     "10": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "25": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "50": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "100": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "250": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "500": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "1000": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5000": {
+      "weight": 0,
+      "prob": 0.0
+     }
+    },
+    "x": {
+     "3": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "4": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "5": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "6": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "7": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "8": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "9": {
+      "weight": 0,
+      "prob": 0.0
+     },
+     "10": {
+      "weight": 600,
+      "prob": 0.603439605752791
+     },
+     "25": {
+      "weight": 240,
+      "prob": 0.24137584230111636
+     },
+     "50": {
+      "weight": 90,
+      "prob": 0.09051594086291864
+     },
+     "100": {
+      "weight": 45,
+      "prob": 0.04525797043145932
+     },
+     "250": {
+      "weight": 8,
+      "prob": 0.008045861410037212
+     },
+     "500": {
+      "weight": 8,
+      "prob": 0.008045861410037212
+     },
+     "1000": {
+      "weight": 3,
+      "prob": 0.0030171980287639548
+     },
+     "5000": {
+      "weight": 0.3,
+      "prob": 0.00030171980287639546
+     }
+    }
+   }
+  },
+  "avg_award_x_bet": {
+   "base": 22.14594551345067,
+   "sheriff": 22.841097107162618,
+   "posse": 36.27174480672741,
+   "showdown": 63.525011384423834,
+   "buy_sheriff": 31.88987865841647,
+   "buy_posse": 54.27744349178303,
+   "buy_showdown": 70.19420220900285
+  }
+ },
+ "free_spins": {
+  "sheriff": {
+   "label": "SHERIFF BONUS",
+   "trigger_scatters": 3,
+   "spins": 10,
+   "wild_floor": 0,
+   "guarantees": [
+    "showdown"
+   ],
+   "min_showdowns": 1,
+   "mode": "natural",
+   "target_return_x_bet": 52,
+   "strips": "fs_sheriff",
+   "showdown_rate": 0.16666666666666666,
+   "modifier_probs_VS_plus_X": [
+    0.8233756308228269,
+    0.15,
+    0.02662436917717304
+   ],
+   "number_table": "base",
+   "buy_price_x_bet": null
+  },
+  "posse": {
+   "label": "POSSE BONUS",
+   "trigger_scatters": 4,
+   "spins": 15,
+   "wild_floor": 5,
+   "guarantees": [
+    "showdown",
+    "sharpshooter"
+   ],
+   "min_showdowns": 1,
+   "mode": "natural",
+   "target_return_x_bet": 192,
+   "strips": "fs_posse",
+   "showdown_rate": 0.25,
+   "modifier_probs_VS_plus_X": [
+    0.7422309384331336,
+    0.2,
+    0.05776906156686646
+   ],
+   "number_table": "posse",
+   "buy_price_x_bet": null
+  },
+  "showdown": {
+   "label": "SHOWDOWN BONUS",
+   "trigger_scatters": "5 (max)",
+   "spins": 20,
+   "wild_floor": 10,
+   "guarantees": [
+    "showdown"
+   ],
+   "min_showdowns": 1,
+   "mode": "natural",
+   "target_return_x_bet": 432,
+   "strips": "fs_showdown",
+   "showdown_rate": 0.2857142857142857,
+   "modifier_probs_VS_plus_X": [
+    0.5430905549828461,
+    0.3,
+    0.15690944501715384
+   ],
+   "number_table": "top",
+   "buy_price_x_bet": null
+  },
+  "buy_sheriff": {
+   "label": "SHERIFF BONUS (buy)",
+   "trigger_scatters": 3,
+   "spins": 10,
+   "wild_floor": 0,
+   "guarantees": [
+    "showdown"
+   ],
+   "min_showdowns": 2,
+   "mode": "buy",
+   "target_return_x_bet": 96.0,
+   "strips": "fs_buy_sheriff",
+   "showdown_rate": 0.16666666666666666,
+   "modifier_probs_VS_plus_X": [
+    0.6813547344932244,
+    0.25,
+    0.06864526550677562
+   ],
+   "number_table": "base",
+   "buy_price_x_bet": 100
+  },
+  "buy_posse": {
+   "label": "POSSE BONUS (buy)",
+   "trigger_scatters": 4,
+   "spins": 15,
+   "wild_floor": 5,
+   "guarantees": [
+    "showdown",
+    "sharpshooter"
+   ],
+   "min_showdowns": 1,
+   "mode": "buy",
+   "target_return_x_bet": 288.0,
+   "strips": "fs_buy_posse",
+   "showdown_rate": 0.25,
+   "modifier_probs_VS_plus_X": [
+    0.6888003882477841,
+    0.2,
+    0.1111996117522159
+   ],
+   "number_table": "posse",
+   "buy_price_x_bet": 300
+  },
+  "buy_showdown": {
+   "label": "SHOWDOWN BONUS (buy)",
+   "trigger_scatters": "5 (max)",
+   "spins": 20,
+   "wild_floor": 10,
+   "guarantees": [
+    "showdown"
+   ],
+   "min_showdowns": 1,
+   "mode": "buy",
+   "target_return_x_bet": 480.0,
+   "strips": "fs_buy_showdown",
+   "showdown_rate": 0.2857142857142857,
+   "modifier_probs_VS_plus_X": [
+    0.5208202624151443,
+    0.3,
+    0.17917973758485561
+   ],
+   "number_table": "top",
+   "buy_price_x_bet": 500
+  }
+ },
+ "retrigger_extra_spins": {
+  "3": 5,
+  "4": 10,
+  "5": 15
+ },
+ "retrigger_cap": null,
+ "retrigger_cap_note": "Uncapped - minor open issue",
+ "antes": {
+  "cost_x_bet": 3.0,
+  "wild": {
+   "strips": "wild_ante",
+   "natural_wild_multiplier_weights": {
+    "1": 45.0,
+    "3": 35.260283721036515,
+    "5": 19.005550942659845,
+    "7": 5.325231692898313,
+    "9": 3.453576689133312,
+    "10": 2.8060028069441243,
+    "25": 1.60538207392906,
+    "50": 0.8888271548770512
+   },
+   "natural_wild_multiplier_probs": {
+    "1": 0.3970184616465533,
+    "3": 0.3110885244477094,
+    "5": 0.16767899106666695,
+    "7": 0.046982562102799094,
+    "9": 0.030469637873291208,
+    "10": 0.02475633150641926,
+    "25": 0.014163696029917083,
+    "50": 0.00784179532664377
+   },
+   "showdown_rate": 0.007920763876843488
+  },
+  "showdown": {
+   "strips": "base",
+   "showdown_rate": 0.09782905388670562
+  },
+  "sharpshooter": {
+   "cost_x_bet": 60.0,
+   "strips": "base",
+   "showdown_rate": 0.007920763876843488,
+   "sharpshooter_rate": 0.2,
+   "wild_count_weights": {
+    "1": 1,
+    "2": 1,
+    "3": 1,
+    "4": 1,
+    "5": 1,
+    "6": 1
+   },
+   "multiplier_weights": {
+    "3": 389.3693450429283,
+    "5": 147.59475572200193,
+    "7": 69.00194346671489,
+    "9": 49.83842434554863,
+    "10": 43.610560990906855,
+    "25": 44.457575340076374,
+    "50": 30.650905220725544,
+    "75": 27.74105287237528,
+    "100": 16.905609155036505
+   },
+   "multiplier_probs": {
+    "3": 0.47532168318334317,
+    "5": 0.18017593991915745,
+    "7": 0.0842339550585442,
+    "9": 0.0608401355903355,
+    "10": 0.05323748651163665,
+    "25": 0.05427147722316355,
+    "50": 0.03741701817589707,
+    "75": 0.03386482298220415,
+    "100": 0.020637481355718322
+   },
+   "multiplier_design_weights": {
+    "3": 78,
+    "5": 14,
+    "7": 4,
+    "9": 2,
+    "10": 1.5,
+    "25": 0.4,
+    "50": 0.1,
+    "75": 0.05,
+    "100": 0.02
+   },
+   "multiplier_tilt": 1.463500414265033,
+   "placement": "in_run",
+   "placement_rule": "Guaranteed wild as in the base game (section 6 step 2). Then, while fewer wilds than drawn are placed: draw the next wild's multiplier; its cell is chosen uniformly among the cells not showing W such that, after converting it, every Sharpshooter wild on the board lies inside the run of its line's best result (section 4; ties go to the first symbol in paytable order) on at least one paying line. No such cell: stop placing.",
+   "presentation": "none - the award procedure's board is shown (every wild counts)",
+   "target_avg_award_x_bet": 286.81696711975593
+  }
+ },
+ "frontend_contract": {
+  "symbol_ids": {
+   "line_symbols": {
+    "H1": "Sheriff Star Badge",
+    "H2": "Guns",
+    "H3": "Bullets",
+    "M1": "Bottle",
+    "M2": "Rope",
+    "M3": "Gloves",
+    "M4": "Stirrups",
+    "L1": "A",
+    "L2": "K",
+    "L3": "Q",
+    "L4": "J",
+    "L5": "10"
+   },
+   "wild": {
+    "W": "Wild (plain W; may carry a multiplier)"
+   },
+   "scatter": {
+    "S": "Scatter (FS symbol)"
+   },
+   "low_order_note": "L5 = 10 (lowest low) ... L1 = A (highest low). Art must be mapped to these ids in this order.",
+   "showdown": {
+    "SHERIFF": "Sheriff, 5x2 block on reels 1-2 (every cell of reels 1-2 carries this id)",
+    "BLANK": "Reel 3 filler during a Showdown (every reel 3 cell except the center)",
+    "VS": "Modifier, reel 3 center cell",
+    "PLUS": "Modifier (+), reel 3 center cell",
+    "X": "Modifier (X), reel 3 center cell",
+    "BANDIT": "Bandit - 6x, 5x2 block on reels 4-5",
+    "ROBBER": "Robber - 8x, 5x2 block on reels 4-5",
+    "COWBOY": "Cowboy - 10x, 5x2 block on reels 4-5",
+    "OUTLAW": "Outlaw - 12x, 5x2 block on reels 4-5",
+    "RANCHER": "Rancher - 15x, 5x2 block on reels 4-5",
+    "BARON": "Baron - 20x, 5x2 block on reels 4-5",
+    "VILLAIN": "Villain - 30x, 5x2 block on reels 4-5",
+    "N3": "Number 3, 5x2 block on reels 4-5",
+    "N4": "Number 4, 5x2 block on reels 4-5",
+    "N5": "Number 5, 5x2 block on reels 4-5",
+    "N6": "Number 6, 5x2 block on reels 4-5",
+    "N7": "Number 7, 5x2 block on reels 4-5",
+    "N8": "Number 8, 5x2 block on reels 4-5",
+    "N9": "Number 9, 5x2 block on reels 4-5",
+    "N10": "Number 10, 5x2 block on reels 4-5",
+    "N25": "Number 25, 5x2 block on reels 4-5",
+    "N50": "Number 50, 5x2 block on reels 4-5",
+    "N100": "Number 100, 5x2 block on reels 4-5",
+    "N250": "Number 250, 5x2 block on reels 4-5",
+    "N500": "Number 500, 5x2 block on reels 4-5",
+    "N1000": "Number 1000, 5x2 block on reels 4-5",
+    "N5000": "Number 5000, 5x2 block on reels 4-5"
+   }
+  },
+  "showdown_board": {
+   "note": "A Showdown spin reveals this 5x5 board (board[reel][row], row 0 = top). No line wins, no scatters, no Sharpshooter on this board.",
+   "reel_1": [
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF"
+   ],
+   "reel_2": [
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF",
+    "SHERIFF"
+   ],
+   "reel_3": [
+    "BLANK",
+    "BLANK",
+    "<VS / PLUS / X>",
+    "BLANK",
+    "BLANK"
+   ],
+   "reel_4": [
+    "<character or number id>",
+    "<character or number id>",
+    "<character or number id>",
+    "<character or number id>",
+    "<character or number id>"
+   ],
+   "reel_5": [
+    "<same id as reel 4>",
+    "<same id as reel 4>",
+    "<same id as reel 4>",
+    "<same id as reel 4>",
+    "<same id as reel 4>"
+   ],
+   "presentation": "Reels 1-2 land the Sheriff and reel 3 lands blanks while the center cell keeps spinning; the center reveals the modifier; reels 4-5 keep spinning, then land the character (VS) or number (PLUS / X). For VS the losing side is bloodied and darkened; the award shows on the winner."
+  },
+  "bet_modes": [
+   {
+    "name": "base",
+    "cost": 1,
+    "kind": "base"
+   },
+   {
+    "name": "wild_ante",
+    "cost": 3.0,
+    "kind": "ante",
+    "strips": "wild_ante"
+   },
+   {
+    "name": "showdown_ante",
+    "cost": 3.0,
+    "kind": "ante",
+    "strips": "base"
+   },
+   {
+    "name": "sharpshooter_ante",
+    "cost": 60.0,
+    "kind": "ante",
+    "strips": "base"
+   },
+   {
+    "name": "buy_sheriff",
+    "cost": 100,
+    "kind": "buy",
+    "tier_level": 1,
+    "strips": "fs_buy_sheriff"
+   },
+   {
+    "name": "buy_posse",
+    "cost": 300,
+    "kind": "buy",
+    "tier_level": 2,
+    "strips": "fs_buy_posse"
+   },
+   {
+    "name": "buy_showdown",
+    "cost": 500,
+    "kind": "buy",
+    "tier_level": 3,
+    "strips": "fs_buy_showdown"
+   }
+  ],
+  "bonus_levels": {
+   "1": "SHERIFF BONUS",
+   "2": "POSSE BONUS",
+   "3": "SHOWDOWN BONUS"
+  },
+  "free_spin_cap": {
+   "cap": null,
+   "rule": "Uncapped. bonusRetrigger.capped is always false and scatters are never removed from free-spin boards. (Minor open issue; if a cap is set later, capped = true on the retrigger that reaches it and later boards carry no S.)"
+  },
+  "wincap_x_bet": 50000,
+  "money": "Internal book: integer micro-units (1,000,000 = 1.00). Stake books: book units (100 = 1.00x), bet-agnostic.",
+  "events": {
+   "reveal": {
+    "when": "Every normal reel spin (base, antes, free spins).",
+    "fields": {
+     "board": "5x5 symbol ids, board[reel][row], as landed (before any Sharpshooter conversion)",
+     "multipliers": "5x5 ints: the multiplier on each landed W (0 = plain / not a wild). Free spins: the tier wild floor on every W; WILD Ante: the ante ladder draw (1-50) on every W",
+     "padding": "{above: 5 ids, below: 5 ids} - the real strip symbols one position above and below each reel's window (strip positions stop-1 and stop+5)",
+     "stops": "5 ints, the strip stop per reel (0-based)",
+     "strips": "strip set id (base, wild_ante, fs_<mode>)",
+     "anticipation": "5 ints per reel: 0 none, 1 light, 2 heavy (math-owned, see section 13)",
+     "gameType": "basegame | freegame"
+    }
+   },
+   "showdown": {
+    "when": "Instead of reveal + winInfo on a Showdown spin (base, SHOWDOWN Ante, free spins).",
+    "fields": {
+     "board": "the Showdown board above",
+     "gameType": "basegame | freegame",
+     "modifier": "VS | PLUS | X",
+     "sheriffValue": 10,
+     "challenger": "VS only: {id, value}",
+     "winner": "VS only: sheriff | challenger",
+     "number": "PLUS / X only: the number",
+     "awardX": "award as a multiple of the bet (VS: 10 + value or value; PLUS: 10 + number; X: 10 x number)",
+     "amount": "award in money"
+    },
+    "client_rule": "The award is this spin's win: present it, celebrate it and (in free spins) dwell on it exactly like a winInfo win."
+   },
+   "sharpshooter": {
+    "when": "After reveal, before winInfo, when the Sharpshooter triggers (at random; never with a scatter on the board).",
+    "fields": {
+     "wilds": "[{reel, row, from: original symbol id, multiplier}]: the wilds shown (section 6 presentation). With the award procedure's own wilds, in placement order, the first entry being the guaranteed-win wild (or the two fallback cells); with a rebuilt presentation, every entry lies inside a winning run. SHARPSHOOTER Ante: always the award procedure's own wilds (no rebuild), every one inside a winning run",
+     "guaranteed": "{cells: [...], fallback: bool} - the award procedure's guaranteed cells, or every shown wild for a rebuilt presentation (fallback false)",
+     "board": "board after conversion",
+     "multipliers": "5x5 multipliers after conversion"
+    }
+   },
+   "winInfo": {
+    "when": "After reveal (and sharpshooter) on every normal reel spin, even with no win.",
+    "fields": {
+     "wins": "line wins: [{lineId (0-9), symbol, count, positions, basePay (x bet), multiplier (sum of wild multipliers in the run, 1 if none), amount}]",
+     "scatter": "optional {count, positions, amount} - scatter pay (3/4/5 = 2x/10x/50x)",
+     "total": "line wins + scatter pay (money)"
+    }
+   },
+   "setTotalWin": {
+    "fields": {
+     "amount": "running round total"
+    }
+   },
+   "bonusTrigger": {
+    "when": "Natural trigger only (3/4/5 S on a base or ante reel spin). Never on a buy.",
+    "fields": {
+     "count": "scatters landed",
+     "positions": "scatter cells",
+     "level": "1/2/3",
+     "mode": "sheriff | posse | showdown (the natural free-spins mode)"
+    }
+   },
+   "bonusStart": {
+    "when": "Start of every free-spins round (natural: after bonusTrigger; buy: first event of the book).",
+    "fields": {
+     "level": "1/2/3",
+     "mode": "natural or buy mode name",
+     "spins": "10 / 15 / 20",
+     "wildFloor": "0 / 5 / 10",
+     "guarantees": "{showdowns: n, sharpshooter: bool}",
+     "source": "natural | buy"
+    }
+   },
+   "bonusRetrigger": {
+    "fields": {
+     "added": "5 / 10 / 15",
+     "awarded": "total spins awarded so far",
+     "remaining": "spins left",
+     "capped": "always false (uncapped)"
+    }
+   },
+   "bonusUpdate": {
+    "when": "After every free spin (reel spin or Showdown).",
+    "fields": {
+     "remaining": "spins left",
+     "awarded": "total awarded",
+     "totalWin": "feature total so far"
+    }
+   },
+   "bonusEnd": {
+    "fields": {
+     "level": "1/2/3",
+     "totalWin": "feature total",
+     "maxWin": "true if the round hit the cap"
+    }
+   },
+   "finalWin": {
+    "fields": {
+     "amount": "settled round win (capped at 50,000x)",
+     "maxWin": "true when the round settled at 50,000x - any mode, including a base-game or ante X5000 Showdown"
+    }
+   }
+  },
+  "event_order": {
+   "reel_spin": "reveal -> [sharpshooter] -> winInfo -> [setTotalWin] -> [bonusTrigger -> bonusStart -> free spins -> bonusEnd] -> finalWin",
+   "showdown_spin": "showdown -> setTotalWin -> finalWin",
+   "free_spin": "reveal -> [sharpshooter] -> winInfo -> [bonusRetrigger] -> bonusUpdate   |   showdown -> bonusUpdate",
+   "buy": "bonusStart -> free spins -> bonusEnd -> finalWin (no base board, no trigger, no scatter pay)"
+  },
+  "not_in_book": "Guarantee redraws, strip selection weights and all other math internals stay behind the provider."
+ },
+ "expected": {
+  "rtp_by_mode": {
+   "base": 0.96,
+   "wild_ante": 0.96,
+   "showdown_ante": 0.96,
+   "sharpshooter_ante": 0.96,
+   "buy_sheriff": 0.96,
+   "buy_posse": 0.96,
+   "buy_showdown": 0.96
+  },
+  "base_rtp_parts": {
+   "Ordinary spins - line wins": 0.38707583526103645,
+   "Sharpshooter spins - line wins": 0.14840996931793907,
+   "Scatter pays": 0.009834977507306912,
+   "Showdown - VS": 0.09614223193712626,
+   "Showdown - +": 0.03193255956949452,
+   "Showdown - X": 0.047338013734863384,
+   "SHERIFF BONUS": 0.2068028907910953,
+   "POSSE BONUS": 0.03132441677674351,
+   "SHOWDOWN BONUS": 0.0011391051043945393
+  },
+  "base_reel_spin_hit_rate": 0.21542125,
+  "base_hit_rate_all_spins": 0.221307,
+  "base_sub_bet_share_of_wins": 0.11255721689779356,
+  "base_sharpshooter_per_reel_spin": 0.01285825,
+  "base_trigger_prob_per_reel_spin": {
+   "sheriff": 0.004008730879804265,
+   "posse": 0.00016445057824522998,
+   "showdown": 2.6578697298290413e-06
+  },
+  "base_max_win_prob_per_spin": 2.703685347241471e-07,
+  "bonus_expected_return_x_bet": {
+   "sheriff": 51.99999999999999,
+   "posse": 192.0,
+   "showdown": 432.0,
+   "buy_sheriff": 95.99999999999999,
+   "buy_posse": 288.0,
+   "buy_showdown": 480.0
+  },
+  "bonus_expected_from_reels_x_bet": {
+   "sheriff": 5.995189757757319,
+   "posse": 56.42220730386423,
+   "showdown": 62.96662279525857,
+   "buy_sheriff": 12.160662720025817,
+   "buy_posse": 88.9142504946284,
+   "buy_showdown": 72.32977696161743
+  },
+  "bonus_avg_showdowns": {
+   "sheriff": 2.0141243665487623,
+   "posse": 3.73783487446101,
+   "showdown": 5.809261095153892,
+   "buy_sheriff": 2.6290265377929574,
+   "buy_posse": 3.667927903338167,
+   "buy_showdown": 5.807747794106224
+  },
+  "bonus_avg_spins": {
+   "sheriff": 10.200313063751947,
+   "posse": 15.252974656155788,
+   "showdown": 20.309968585598664,
+   "buy_sheriff": 10.240887345916034,
+   "buy_posse": 15.305096617222786,
+   "buy_showdown": 20.304644366531434
+  },
+  "bonus_median_win_x_bet": {
+   "sheriff": 37.5,
+   "posse": 120.5,
+   "showdown": 245.5,
+   "buy_sheriff": 55.5,
+   "buy_posse": 168.0,
+   "buy_showdown": 276.5
+  },
+  "bonus_max_win_prob_per_round": {
+   "sheriff": 3.385076965903957e-05,
+   "posse": 6.141388310282102e-05,
+   "showdown": 0.0002750260286835987,
+   "buy_sheriff": 0.00011392223497456158,
+   "buy_posse": 0.00011600459578678142,
+   "buy_showdown": 0.00031397889742742954
+  },
+  "wild_ante_reel_spin_hit_rate": 0.260807375,
+  "sharpshooter_ante_avg_award_x_bet": 287.05116175,
+  "sharpshooter_ante_median_award_x_bet": 101.0,
+  "sharpshooter_ante_wilds_shown": {
+   "1": 0.1633615,
+   "2": 0.169561125,
+   "3": 0.166673375,
+   "4": 0.16674975,
+   "5": 0.16690025,
+   "6": 0.166754,
+   "7": 0.0
+  }
+ }
+}

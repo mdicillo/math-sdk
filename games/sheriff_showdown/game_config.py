@@ -1,0 +1,75 @@
+"""Sheriff Showdown game configuration, inherits from src/config/config.py.
+
+Source of truth: the math outline (Dropbox JackslotAudio/SheriffShowdown/math/output/math_spec.md; its JSON copy is
+math_spec.json here, loaded by spec.py). Reel strips in reels/ are the outline's strips, copied verbatim.
+"""
+
+from src.config.config import Config
+from src.config.distributions import Distribution
+from src.config.betmode import BetMode
+
+import spec
+
+
+class GameConfig(Config):
+    """Sheriff Showdown: 5 reels x 5 rows, 10 fixed paylines, left to right."""
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        super().__init__()
+        self.game_id = "sheriff_showdown"
+        self.game_name = "sheriff_showdown"
+        self.provider_number = 0
+        self.working_name = "Sheriff Showdown"
+        self.wincap = spec.WINCAP_X
+        self.win_type = "lines"
+        self.rtp = spec.RTP_TARGET
+        self.construct_paths()
+
+        # Game Dimensions
+        self.num_reels = spec.REELS
+        self.num_rows = [spec.ROWS] * self.num_reels
+
+        # Line pays x total bet; the SDK sums line pays with no division by the line count (spec section 4).
+        self.paytable = {(n, sym): pay for sym, pays in spec.PAYTABLE.items() for n, pay in pays.items()}
+
+        # Row index per reel (0 = top). Keys are 0-based, matching the events' lineId.
+        self.paylines = {idx: list(rows) for idx, rows in enumerate(spec.PAYLINES)}
+
+        # The game's events carry rows 0-4 and the off-screen symbols in `reveal.padding` (spec section 14.5).
+        self.include_padding = False
+        self.special_symbols = {"wild": [spec.WILD], "scatter": [spec.SCATTER]}
+
+        # Reels: the outline's strip sets (spec.STRIPS, read straight from reels/*.csv).
+        self.reels = spec.STRIPS
+        self.padding_reels[self.basegame_type] = spec.STRIPS["base"]
+        self.padding_reels[self.freegame_type] = spec.STRIPS["fs_sheriff"]
+
+        def conditions(strips):
+            return {
+                "reel_weights": {self.basegame_type: {strips: 1}},
+                "force_wincap": False,
+                "force_freegame": False,
+            }
+
+        # Step 1 (grid, pays, strips): the paid modes that spin the reels. Buys arrive with the free spins.
+        self.bet_modes = []
+        for name, mode in spec.BASE_MODES.items():
+            self.bet_modes.append(
+                BetMode(
+                    name=name,
+                    cost=mode["cost"],
+                    rtp=self.rtp,
+                    max_win=self.wincap,
+                    auto_close_disabled=False,
+                    is_feature=True,
+                    is_buybonus=False,
+                    distributions=[Distribution(criteria="basegame", quota=1, conditions=conditions(mode["strips"]))],
+                )
+            )

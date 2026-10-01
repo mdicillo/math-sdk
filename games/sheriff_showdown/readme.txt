@@ -36,7 +36,12 @@ bonusUpdate / bonusEnd around a free-spins round (spec 14.5); `sharpshooter` {wi
 board, multipliers} after reveal, before winInfo (rows 0-4; there are no padding rows in the game's events).
 
 Running:
-  PYTHONPATH=. python3 games/sheriff_showdown/run_debug.py   sims only, readable books, config files (10,000 a mode)
+  PYTHONPATH=. python3 games/sheriff_showdown/run.py         certification: 100,000 books a mode, weights, configs,
+                                                             PAR sheet, format checks (~1.5 hours)
+  PYTHONPATH=. python3 games/sheriff_showdown/volatility.py  Stake's volatility gate, normalized per mode
+  PYTHONPATH=. python3 games/sheriff_showdown/run_debug.py   readable books, weights, configs (10,000 a mode, ~9 min)
+  PYTHONPATH=. python3 games/sheriff_showdown/targets.py     the exact category model -> targets.json (~15 min)
+  PYTHONPATH=. python3 games/sheriff_showdown/resolve.py     re-solve the four solved parameters (~20 min a run)
 
 Port status:
   Step 1 - grid, paytable, paylines, exact strips, the four reel-spin modes: normal reel spins with line and scatter
@@ -124,3 +129,14 @@ Port status:
            3.68M base, 1 in 8,779 / 8,620 / 3,185 buys (spec 8,778 / 8,620 / 3,185); events per book 17.8 paid,
            30.9 / 45.1 / 57.2 buys (<= 5.7M a mode at 100,000 books, under Stake's 10M); parity:sdk 0 differences on
            70,000 books. Debug run ~9 minutes.
+  Step 6c - the full pipeline (run.py): 100,000 books a mode (one batch a mode - the SDK freezes a mode's force-record
+           keys after each batch, and a key first recorded in a later batch fails), compressed; weights.py; the config
+           files; the PAR sheet (the categories are described to the SDK as "fences" in math_config.json, opt_params in
+           game_config.py - no optimizer runs); the RGS format checks; volatility.py, Stake's volatility gate normalized
+           per mode as the platform applies it (the SDK's own check compares raw values).
+           Certification run (2026-10-01, 90.6 minutes): every published table 96.00000%; largest in-category tilt
+           2.95% (SHARPSHOOTER Ante's natural SHOWDOWN BONUS X50 class, 239 books), all others <= 2.06%; SHA-256 and payout hash OK for all 7 modes;
+           normalized volatility PASS for all 7 (largest: base etl40b 0.30, SHOWDOWN buy etl10k 0.10, cvar <= 183);
+           50,000x 1 in 3.68M base / WILD Ante, 596,298 SHOWDOWN Ante, 4.10M SHARPSHOOTER Ante, 8,779 / 8,620 / 3,185
+           buys; events 1.79M-5.71M a mode (Stake's limit 10M), at most 127 in one book; parity:sdk --publish 0
+           differences on all 700,000 books.

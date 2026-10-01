@@ -144,3 +144,42 @@ BASE_MODES["base"]["showdown"] = showdown_context(SPEC["showdown"]["rate_per_spi
 BASE_MODES["wild_ante"]["showdown"] = showdown_context(SPEC["antes"]["wild"]["showdown_rate"], "base")
 BASE_MODES["showdown_ante"]["showdown"] = showdown_context(SPEC["antes"]["showdown"]["showdown_rate"], "base")
 BASE_MODES["sharpshooter_ante"]["showdown"] = showdown_context(_SHARP_ANTE["showdown_rate"], "base")
+
+# Free spins (section 10). Natural and bought bonuses are separate modes with their own content.
+LEVEL_BY_MODE = {"sheriff": 1, "posse": 2, "showdown": 3, "buy_sheriff": 1, "buy_posse": 2, "buy_showdown": 3}
+FREE_SPINS_MODES = {
+    fid: {
+        "id": fid,
+        "label": t["label"],
+        "level": LEVEL_BY_MODE[fid],
+        "source": "buy" if t["mode"] == "buy" else "natural",
+        "spins": t["spins"],
+        "wild_floor": t["wild_floor"],
+        "strips": t["strips"],
+        "showdown": {
+            "rate": t["showdown_rate"],
+            "modifiers": dict(zip(("VS", "PLUS", "X"), t["modifier_probs_VS_plus_X"])),
+            "table": t["number_table"],
+        },
+        # The round is redrawn until it has at least this many Showdowns (and, when needed, a Sharpshooter spin).
+        "min_showdowns": t["min_showdowns"],
+        "needs_sharpshooter": "sharpshooter" in t["guarantees"],
+        "buy_price": t["buy_price_x_bet"],
+        "target_return": t["target_return_x_bet"],
+    }
+    for fid, t in SPEC["free_spins"].items()
+}
+# Extra spins on a free-spin retrigger by scatter count (the top count = that many or more); the cap (None: uncapped).
+RETRIGGER_SPINS = {int(k): v for k, v in SPEC["retrigger_extra_spins"].items()}
+RETRIGGER_CAP = SPEC["retrigger_cap"]
+
+
+def natural_mode_for(scatters: int):
+    """Natural free-spins mode by scatter count on a base / ante reel spin (3 / 4 / 5+), or None."""
+    if scatters >= 5:
+        return FREE_SPINS_MODES["showdown"]
+    if scatters == 4:
+        return FREE_SPINS_MODES["posse"]
+    if scatters == 3:
+        return FREE_SPINS_MODES["sheriff"]
+    return None

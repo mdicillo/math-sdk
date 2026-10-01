@@ -26,6 +26,8 @@ from spec import (
     CHALLENGERS,
     CHALLENGER_WEIGHTS,
     NUMBER_TABLES,
+    RETRIGGER_CAP,
+    RETRIGGER_SPINS,
     STRIPS,
     WINCAP_X,
     WILD,
@@ -491,3 +493,53 @@ def play_spin(ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sha
         showdown = draw_showdown(ctx)
         return {"kind": "showdown", "showdown": showdown, "winX": showdown["awardX"]}
     return {"kind": "reels", **play_reel_spin(strip_id, floor, ladder, sharp)}
+
+
+# --- Free spins (section 10) ------------------------------------------------------------------------------------
+
+
+def play_free_spins_once(mode: dict) -> dict:
+    """One free-spins round as played: each spin a Showdown with the mode's chance, else a reel spin on its strips with
+    its wild floor (and the shared Sharpshooter at the strips' chance); 3 / 4 / 5+ scatters add 5 / 10 / 15 spins
+    (uncapped unless RETRIGGER_CAP is set)."""
+    spins = []
+    remaining = awarded = mode["spins"]
+    total_x, showdowns, sharp = 0, 0, False
+    top = max(RETRIGGER_SPINS)
+    while remaining > 0:
+        remaining -= 1
+        result = play_spin(mode["showdown"], mode["strips"], mode["wild_floor"])
+        total_x += result["winX"]
+        added = 0
+        if result["kind"] == "showdown":
+            showdowns += 1
+        else:
+            if result["sharpshooter"]:
+                sharp = True
+            n = result["scatter"]["count"]
+            if n >= 3:
+                added = RETRIGGER_SPINS[min(n, top)]
+                if RETRIGGER_CAP is not None:
+                    added = max(0, min(added, RETRIGGER_CAP - awarded))
+                awarded += added
+                remaining += added
+        spins.append({"result": result, "added": added})
+    return {"mode": mode, "spins": spins, "totalX": total_x, "showdowns": showdowns, "sharpshooter": sharp}
+
+
+def meets_guarantees(round_: dict) -> bool:
+    """Does a played round meet its mode's guarantees?"""
+    mode = round_["mode"]
+    return round_["showdowns"] >= mode["min_showdowns"] and (not mode["needs_sharpshooter"] or round_["sharpshooter"])
+
+
+def play_free_spins(mode: dict) -> dict:
+    """Play a free-spins round, redrawing the whole round until it meets the mode's guarantees (no spin is ever
+    forced, so guaranteed events land on random spins). `draws`: rounds played (1 = kept on the first draw)."""
+    draws = 0
+    while True:
+        draws += 1
+        round_ = play_free_spins_once(mode)
+        if meets_guarantees(round_):
+            round_["draws"] = draws
+            return round_

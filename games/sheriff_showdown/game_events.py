@@ -102,3 +102,40 @@ def set_total_win_event(gamestate, amount: int) -> None:
 
 def final_win_event(gamestate, amount: int, max_win: bool) -> None:
     add_event(gamestate, {"type": "finalWin", "amount": amount, "maxWin": max_win})
+
+
+def bonus_trigger_event(gamestate, scatter: dict, mode: dict) -> None:
+    """Natural trigger only (3/4/5 scatters on a base or ante reel spin); never on a buy."""
+    add_event(
+        gamestate,
+        {"type": "bonusTrigger", "count": scatter["count"], "positions": scatter["positions"], "level": mode["level"], "mode": mode["id"]},
+    )
+
+
+def bonus_start_event(gamestate, mode: dict) -> None:
+    """Start of every free-spins round (natural: after bonusTrigger; buy: the book's first event)."""
+    add_event(
+        gamestate,
+        {
+            "type": "bonusStart",
+            "level": mode["level"],
+            "mode": mode["id"],
+            "spins": mode["spins"],
+            "wildFloor": mode["wild_floor"],
+            "guarantees": {"showdowns": mode["min_showdowns"], "sharpshooter": mode["needs_sharpshooter"]},
+            "source": mode["source"],
+        },
+    )
+
+
+def bonus_retrigger_event(gamestate, added: int, awarded: int, remaining: int, capped: bool) -> None:
+    add_event(gamestate, {"type": "bonusRetrigger", "added": added, "awarded": awarded, "remaining": remaining, "capped": capped})
+
+
+def bonus_update_event(gamestate, remaining: int, awarded: int, total_win: int) -> None:
+    """After every free spin (reel spin or Showdown). `total_win`: the feature total so far, book units."""
+    add_event(gamestate, {"type": "bonusUpdate", "remaining": remaining, "awarded": awarded, "totalWin": total_win})
+
+
+def bonus_end_event(gamestate, mode: dict, total_win: int, max_win: bool) -> None:
+    add_event(gamestate, {"type": "bonusEnd", "level": mode["level"], "totalWin": total_win, "maxWin": max_win})

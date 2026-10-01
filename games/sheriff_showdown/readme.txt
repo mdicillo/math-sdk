@@ -31,7 +31,8 @@ fs_buy_posse, fs_buy_showdown. The outline's anticipation_* strips are display-o
 and are not math reelsets.
 
 Custom events beyond step 1: `showdown` {board, gameType, modifier, sheriffValue, challenger?, winner?, number?,
-awardX, amount} instead of reveal + winInfo on a Showdown spin; `sharpshooter` {wilds: [{reel, row, from, multiplier}], guaranteed: {cells, fallback},
+awardX, amount} instead of reveal + winInfo on a Showdown spin; bonusTrigger / bonusStart / bonusRetrigger /
+bonusUpdate / bonusEnd around a free-spins round (spec 14.5); `sharpshooter` {wilds: [{reel, row, from, multiplier}], guaranteed: {cells, fallback},
 board, multipliers} after reveal, before winInfo (rows 0-4; there are no padding rows in the game's events).
 
 Running:
@@ -64,3 +65,15 @@ Port status:
            a forced X5000 book pays 5,000,000 with finalWin.maxWin; parity:sdk 0 differences on 40,000 books.
            (engine.showdown_outcomes reads config.py's unsolved X5000 weight 0.02; the spec's solved weight is
            0.6328 - the spec is what's ported.)
+  Step 4 - natural free spins (sections 9-10): 3 / 4 / 5+ scatters on a paid reel spin trigger SHERIFF / POSSE /
+           SHOWDOWN BONUS (10 / 15 / 20 spins, fs_<tier> strips, wild floor 0 / 5 / 10, the tier's Showdown chance,
+           modifier odds and number table, the shared Sharpshooter at the strips' chance raised to the floor);
+           retriggers +5 / +10 / +15, uncapped; guarantees met by redrawing the whole free-spins round; the round is
+           emitted spin by spin and stops at the max win. No setTotalWin inside free spins (spec 14.6).
+           Verified against spec section 12 (presentation off; it never changes an award), per tier: return
+           52.34x +/- 0.54 (52.0), 190.06x +/- 1.48 (192.0), 430.61x +/- 1.41 (432.0); from reels 5.98 / 56.22 /
+           62.93 (6.0 / 56.4 / 63.0); Showdowns 2.014 / 3.741 / 5.811 (2.01 / 3.74 / 5.81); spins 10.20 / 15.26 /
+           20.31; medians 37.5 / 120 / 244 (38 / 120 / 246); kept on the first draw 0.842 / 0.716 / 0.999 (0.843 /
+           0.715 / 0.999). Trigger odds per reel spin 1 in 249 / 6,081 / 376,241 (exact = spec). Base RTP assembled
+           from the port's parts 95.89% (spec parts with the sampled reel-spin value 95.91%; the spec's own split gives
+           0.5497 per reel spin -> 96.00%). parity:sdk 0 differences on 40,000 books.

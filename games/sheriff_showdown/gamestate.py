@@ -4,8 +4,13 @@ src/rgs/sheriff/provider.ts round() + BookBuilder)."""
 from src.state.state import GeneralGameState
 
 import spec
-from game_calculations import play_spin
+from game_calculations import play_free_spins, play_spin
 from game_events import (
+    bonus_end_event,
+    bonus_retrigger_event,
+    bonus_start_event,
+    bonus_trigger_event,
+    bonus_update_event,
     final_win_event,
     reveal_event,
     set_total_win_event,
@@ -50,11 +55,17 @@ class GameState(GeneralGameState):
             if result["kind"] == "showdown":
                 self.showdown(result["showdown"])
                 set_total_win_event(self, self.total_units)
+                self.win_manager.update_gametype_wins(self.gametype)
             else:
                 self.reel_spin(result)
                 if self.total_units > 0:
                     set_total_win_event(self, self.total_units)
-            self.win_manager.update_gametype_wins(self.gametype)
+                self.win_manager.update_gametype_wins(self.gametype)
+                natural = spec.natural_mode_for(result["scatter"]["count"])
+                if natural and not self.capped:
+                    self.record({"bonus": natural["id"], "gametype": self.gametype})
+                    bonus_trigger_event(self, result["scatter"], natural)
+                    self.free_spins(natural)
 
             self.update_final_win()
             final_win_event(self, self.total_units, self.capped)
@@ -81,6 +92,32 @@ class GameState(GeneralGameState):
         win_info_event(self, result, paid)
         return paid
 
+    def free_spins(self, mode: dict) -> None:
+        """One free-spins round (natural or bought). The round is drawn whole - redrawn until it meets its guarantees -
+        then emitted spin by spin, stopping at the max win (provider.ts BookBuilder.freeSpins)."""
+        round_ = play_free_spins(mode)
+        self.gametype = self.config.freegame_type
+        bonus_start_event(self, mode)
+        remaining = awarded = mode["spins"]
+        feature_win = 0
+        for spin in round_["spins"]:
+            remaining -= 1
+            result = spin["result"]
+            feature_win += self.showdown(result["showdown"]) if result["kind"] == "showdown" else self.reel_spin(result)
+            self.win_manager.update_gametype_wins(self.gametype)
+            if self.capped:
+                remaining = 0
+            elif spin["added"] > 0:
+                awarded += spin["added"]
+                remaining += spin["added"]
+                capped = spec.RETRIGGER_CAP is not None and awarded >= spec.RETRIGGER_CAP
+                bonus_retrigger_event(self, spin["added"], awarded, remaining, capped)
+            bonus_update_event(self, remaining, awarded, feature_win)
+            if self.capped:
+                break
+        bonus_end_event(self, mode, feature_win, self.capped)
+        self.gametype = self.config.basegame_type
+
     def run_freespin(self):
-        """Free spins arrive in a later port step."""
+        """Free spins run inside run_spin (free_spins): the round is drawn whole before its events are written."""
         raise NotImplementedError

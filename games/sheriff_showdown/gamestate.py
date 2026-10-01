@@ -5,7 +5,14 @@ from src.state.state import GeneralGameState
 
 import spec
 from game_calculations import play_reel_spin
-from game_events import final_win_event, reveal_event, set_total_win_event, to_units, win_info_event
+from game_events import (
+    final_win_event,
+    reveal_event,
+    set_total_win_event,
+    sharpshooter_event,
+    to_units,
+    win_info_event,
+)
 
 
 class GameState(GeneralGameState):
@@ -38,8 +45,9 @@ class GameState(GeneralGameState):
         while self.repeat:
             self.reset_book()
             mode = spec.BASE_MODES[self.betmode]
-            strip_id = mode["strips"]
-            result = play_reel_spin(strip_id, spec.STRIPS[strip_id], spec.CLEAN_STOPS[strip_id])
+            result = play_reel_spin(
+                mode["strips"], 0, mode.get("wild_multipliers"), mode.get("sharpshooter")
+            )
             self.reel_spin(result)
             if self.total_units > 0:
                 set_total_win_event(self, self.total_units)
@@ -54,6 +62,9 @@ class GameState(GeneralGameState):
         """One normal reel spin's events: reveal, then winInfo with what the spin added to the round."""
         self.win_manager.reset_spin_win()
         reveal_event(self, result)
+        if result["sharpshooter"]:
+            self.record({"sharpshooter": len(result["sharpshooter"]["wilds"]), "gametype": self.gametype})
+            sharpshooter_event(self, result["sharpshooter"])
         total = to_units(result["scatter"]["payX"]) + sum(to_units(line["payX"]) for line in result["lines"])
         paid = self.pay(total)
         win_info_event(self, result, paid)

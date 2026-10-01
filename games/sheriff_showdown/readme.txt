@@ -30,6 +30,9 @@ them instead of the SDK's read_reels_csv): base, wild_ante, fs_sheriff, fs_posse
 fs_buy_posse, fs_buy_showdown. The outline's anticipation_* strips are display-only (the client spins reels on them)
 and are not math reelsets.
 
+Custom events beyond step 1: `sharpshooter` {wilds: [{reel, row, from, multiplier}], guaranteed: {cells, fallback},
+board, multipliers} after reveal, before winInfo (rows 0-4; there are no padding rows in the game's events).
+
 Running:
   PYTHONPATH=. python3 games/sheriff_showdown/run_debug.py   sims only, readable books, config files (10,000 a mode)
 
@@ -41,3 +44,13 @@ Port status:
            windows) base 0.40487x, wild_ante strips 0.54746x, matching engine.py (0.4050 / 0.5481 at 8M spins);
            line evaluation identical to engine.lines_eval on 160,000 boards (all strip sets, random multipliers);
            parity:sdk 0 differences on 40,000 books.
+  Step 2 - wild multipliers and the Sharpshooter (sections 5-7): WILD Ante's natural-wild ladder; the Sharpshooter
+           drawn before the stops (scatter-free stops on a Sharpshooter spin) at each strip set's chance, the
+           guaranteed-win wild / fallback, the shared wild counts and multipliers with the step 6 presentation
+           rebuild, and SHARPSHOOTER Ante's own content (1 in 5, 1-6 wilds, in-run placement, no rebuild).
+           Event: sharpshooter.
+           Verified: forced base Sharpshooter avg award 11.623x +/- 0.083 (spec 11.630) over 48,000 spins, 2.94 wilds
+           shown (award step 1.59), every rebuild exact and in-run; SHARPSHOOTER Ante 286.5x +/- 2.4 (spec 286.8)
+           over 64,000, share / avg / median by wild count matching the spec's section 7 table; whole reel-spin
+           return vs engine.py: base 0.5475 +/- 0.0030 (0.5488), wild_ante 2.514 +/- 0.014 (2.502);
+           parity:sdk 0 differences on 40,000 books. The Python rebuild costs ~0.1 s a Sharpshooter.

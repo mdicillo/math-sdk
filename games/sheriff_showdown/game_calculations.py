@@ -21,7 +21,13 @@ from spec import (
     SHARPSHOOTER_PRESENT_PAIR_SAMPLE,
     SHARPSHOOTER_RATE,
     SHARPSHOOTER_WILD_COUNT,
+    SHERIFF_VALUE,
+    SHERIFF_WIN_CHANCE,
+    CHALLENGERS,
+    CHALLENGER_WEIGHTS,
+    NUMBER_TABLES,
     STRIPS,
+    WINCAP_X,
     WILD,
 )
 
@@ -415,6 +421,43 @@ def present_sharpshooter(landed: list, landed_mults: list, award: float, floor: 
     return None
 
 
+# --- Showdown (section 8) ----------------------------------------------------------------------------------------
+
+CENTER_ROW = 2
+
+
+def showdown_board(modifier: str, right_id: str) -> list:
+    """The Showdown board (section 14.2): the Sheriff on reels 1-2, blanks on reel 3 with the modifier in the center,
+    the challenger or number on reels 4-5."""
+    sheriff = ["SHERIFF"] * ROWS
+    mid = [modifier if row == CENTER_ROW else "BLANK" for row in range(ROWS)]
+    right = [right_id] * ROWS
+    return [sheriff, list(sheriff), mid, right, list(right)]
+
+
+def draw_showdown(ctx: dict) -> dict:
+    """Draw a Showdown outcome from `ctx`'s odds: the modifier, then VS a challenger and who wins (the Sheriff with
+    SHERIFF_WIN_CHANCE: 10 + the challenger's value, else the challenger's value), or a number from the modifier's table
+    (+: 10 + number, X: 10 x number). The award is capped at the max win."""
+    tables = NUMBER_TABLES[ctx["table"]]
+    modifier = draw(ctx["modifiers"])
+    if modifier == "VS":
+        challenger = draw(CHALLENGER_WEIGHTS)
+        value = CHALLENGERS[challenger]
+        sheriff_wins = random.random() < SHERIFF_WIN_CHANCE
+        award_x = SHERIFF_VALUE + value if sheriff_wins else value
+        return {
+            "modifier": modifier,
+            "challenger": {"id": challenger, "value": value},
+            "winner": "sheriff" if sheriff_wins else "challenger",
+            "awardX": min(award_x, int(WINCAP_X)),
+            "board": showdown_board(modifier, challenger),
+        }
+    number = draw(tables[modifier])
+    award_x = SHERIFF_VALUE + number if modifier == "PLUS" else SHERIFF_VALUE * number
+    return {"modifier": modifier, "number": number, "awardX": min(award_x, int(WINCAP_X)), "board": showdown_board(modifier, f"N{number}")}
+
+
 # --- One normal reel spin (sections 2, 4-7) ---------------------------------------------------------------------
 
 
@@ -440,3 +483,11 @@ def play_reel_spin(strip_id: str, floor: int = 0, ladder: dict = None, sharp: di
         "scatter": scatter,
         "winX": win_x,
     }
+
+
+def play_spin(ctx: dict, strip_id: str, floor: int = 0, ladder: dict = None, sharp: dict = None) -> dict:
+    """A paid spin (base / antes) or a free spin: a Showdown with the context's chance, else a normal reel spin."""
+    if random.random() < ctx["rate"]:
+        showdown = draw_showdown(ctx)
+        return {"kind": "showdown", "showdown": showdown, "winX": showdown["awardX"]}
+    return {"kind": "reels", **play_reel_spin(strip_id, floor, ladder, sharp)}

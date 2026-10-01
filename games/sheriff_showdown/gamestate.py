@@ -4,12 +4,13 @@ src/rgs/sheriff/provider.ts round() + BookBuilder)."""
 from src.state.state import GeneralGameState
 
 import spec
-from game_calculations import play_reel_spin
+from game_calculations import play_spin
 from game_events import (
     final_win_event,
     reveal_event,
     set_total_win_event,
     sharpshooter_event,
+    showdown_event,
     to_units,
     win_info_event,
 )
@@ -45,18 +46,28 @@ class GameState(GeneralGameState):
         while self.repeat:
             self.reset_book()
             mode = spec.BASE_MODES[self.betmode]
-            result = play_reel_spin(
-                mode["strips"], 0, mode.get("wild_multipliers"), mode.get("sharpshooter")
-            )
-            self.reel_spin(result)
-            if self.total_units > 0:
+            result = play_spin(mode["showdown"], mode["strips"], 0, mode.get("wild_multipliers"), mode.get("sharpshooter"))
+            if result["kind"] == "showdown":
+                self.showdown(result["showdown"])
                 set_total_win_event(self, self.total_units)
+            else:
+                self.reel_spin(result)
+                if self.total_units > 0:
+                    set_total_win_event(self, self.total_units)
             self.win_manager.update_gametype_wins(self.gametype)
 
             self.update_final_win()
             final_win_event(self, self.total_units, self.capped)
             self.check_repeat()
         self.imprint_wins()
+
+    def showdown(self, sd: dict) -> int:
+        """One Showdown spin's event; its award (clamped at the max win) is the spin's pay."""
+        self.win_manager.reset_spin_win()
+        paid = self.pay(to_units(sd["awardX"]))
+        self.record({"showdown": sd["modifier"], "gametype": self.gametype})
+        showdown_event(self, sd, paid)
+        return paid
 
     def reel_spin(self, result: dict) -> int:
         """One normal reel spin's events: reveal, then winInfo with what the spin added to the round."""
